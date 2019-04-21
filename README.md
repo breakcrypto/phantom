@@ -1,10 +1,21 @@
-# Phantom Nodes
+# Phantomnode Daemon
 
-## Overview
+Phantom nodes requires no static IP address, no copy of the blockchain, and no proof-of-service. As such, you can run a node on any IP address of your liking: `1.1.1.1` or `8.8.8.8` if you wish. The phantom daemon is extremely lightweight allowing you to run hundreds of nodes from a modest machine if you wished. And, possibly most importantly, you can move your currently running masternodes to phantom nodes without restarting since a real IP address is no longer a requirement.
 
-Phantom nodes requires no static IP address, no copy of the blockchain, and no proof-of-service. As such, you can run a node on any IP address of your liking `1.1.1.1` or `8.8.8.8` for example. Additionally, you can move your currently running masternodes to phantom nodes without restarting since a real IP address is no longer a requirement.
+The phantom daemon is custom built wallet designed to replicate only what is required for pre-EVO masternodes to run; it replaces the masternode daemon piece. It does not handle any wallet private keys and has no access to your coins. You will still need a wallet to start your masternodes, but once started, the phatom node system will handle the rest for you.
 
-The phantom node source is custom built wallet designed to replicate only what is required for pre-EVO masternodes to run; it replaces the masternode daemon piece. It does not handle any wallet private keys and has no access to your coins. You will still need a wallet to start your masternodes, but once started, the phatom node system will handle the rest for you.
+# A note from the developer
+
+Phantoms have been released to make it easier, and less costly, for masternode supporters to host their own nodes. Masternode hosting companies are free to utilize the phantom system as long as they comply with the terms of the Server Side Public License. 
+
+# Downloads
+
+[OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-darwin-amd64)
+[Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-linux-amd64)
+[ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-linux-arm)
+[Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-windows-amd64.exe)
+
+# Setup 
 
 The setup is simple: copy your masternode.conf, modify it slightly, launch the phantom executable.
 
@@ -70,8 +81,15 @@ Copy your masternode.conf to the same folder as the phantom executable. Rename i
 * daemon_version
   * CLIENT_MASTERNODE_VERSION from clientversion.h
 
-# Building (using Docker)
+## Building (using Docker)
 
 ```
 docker run --rm -it -v "$PWD":/go/src/phantom -w /go/src/phantom golang:1.12.4 ./build.sh 
 ```
+
+## Donation Addresses
+BTC: 151HTde9NgwbMMbMmqqpJYruYRL4SLZg1S
+
+LTC: LhBx1TUyp7wiYuMxjefAGUGZVzuHRtPBA7
+
+DOGE: DBahutcjEAxfwQEW7kzft2y8dhZN2VtcG5
