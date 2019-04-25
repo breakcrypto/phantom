@@ -240,7 +240,7 @@ func (pinger *PingerConnection) Start() {
 
 						inv := wire.MsgInv{}
 						invVec := wire.InvVect{}
-						invVec.Type = 17
+						invVec.Type = 15
 						invVec.Hash = chainhash.DoubleHashH(mnpBytes)
 						inv.AddInvVect(&invVec)
 
