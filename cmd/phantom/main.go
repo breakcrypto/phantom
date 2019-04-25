@@ -36,7 +36,9 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"log"
 	"net"
-	"phantom/socket/wire"
+	"phantom/pkg/socket/wire"
+	"phantom/pkg/phantom"
+	"phantom/internal"
 	"strconv"
 	"strings"
 	"sync"
@@ -55,7 +57,7 @@ var bootstrapExplorer string
 var sentinelVersion uint32
 var daemonVersion uint32
 
-const VERSION = "0.0.1"
+const VERSION = "0.0.2"
 
 func main() {
 
@@ -94,19 +96,19 @@ func main() {
 
 	if sentinelString != "" {
 		//fmt.Println("ENABLING SENTINEL.")
-		sentinelVersion = convertVersionStringToInt(sentinelString)
+		sentinelVersion = phantom.ConvertVersionStringToInt(sentinelString)
 	}
 
 	if daemonString != "" {
-		//fmt.Println("ENABLING SENTINEL.")
-		sentinelVersion = convertVersionStringToInt(daemonString)
+		//fmt.Println("ENABLING DAEMON.")
+		daemonVersion = phantom.ConvertVersionStringToInt(daemonString)
 	}
 
 	if magicMsgNewLine {
 		magicMessage = magicMessage + "\n"
 	}
 
-	var connectionSet = make(map[string]*PingerConnection)
+	var connectionSet = make(map[string]*phantom.PingerConnection)
 	var peerSet = make(map[string]wire.NetAddress)
 
 	var waitGroup sync.WaitGroup
@@ -124,10 +126,10 @@ func main() {
 	addrProcessingChannel := make(chan wire.NetAddress, 1500)
 	hashProcessingChannel := make(chan chainhash.Hash, 1500)
 
-	hashQueue := NewQueue(12)
+	hashQueue := internal.NewQueue(12)
 
 	if bootstrapExplorer != "" {
-		bootstrapper := Bootstrapper{bootstrapExplorer}
+		bootstrapper := phantom.Bootstrapper{bootstrapExplorer}
 		var err error
 		bootstrapHash, err = bootstrapper.LoadBlockHash()
 
@@ -144,7 +146,7 @@ func main() {
 		hashQueue.Push(&bootstrapHash)
 	}
 
-	Preamble()
+	internal.Preamble(VERSION)
 
 	time.Sleep(10 * time.Second)
 
@@ -162,15 +164,17 @@ func main() {
 
 	for ip := range peerSet {
 		//make the ping channel
-		pingChannel := make(chan MasternodePing, 1500)
+		pingChannel := make(chan phantom.MasternodePing, 1500)
 
 		waitGroup.Add(1)
 
-		pinger := PingerConnection{
+		pinger := phantom.PingerConnection{
 			MagicBytes: magicBytes,
 			IpAddress: ip,
 			Port: uint16(defaultPort),
 			ProtocolNumber: protocolNumber,
+			SentinelVersion: sentinelVersion,
+			DaemonVersion: daemonVersion,
 			BootstrapHash: bootstrapHash,
 			PingChannel: pingChannel,
 			AddrChannel: addrProcessingChannel,
@@ -185,7 +189,7 @@ func main() {
 		go pinger.Start()
 	}
 
-	pingGeneratorChannel := make(chan MasternodePing, 1500)
+	pingGeneratorChannel := make(chan phantom.MasternodePing, 1500)
 
 	waitGroup.Add(1)
 
@@ -210,23 +214,23 @@ func splitAddressList(bootstraps string) (addresses []wire.NetAddress) {
 	return addresses
 }
 
-func generatePings(pingChannel chan MasternodePing, queue *Queue, magicMessage string) {
+func generatePings(pingChannel chan phantom.MasternodePing, queue *internal.Queue, magicMessage string) {
 	for {
 
 		fmt.Println("Loading settings from masternode.txt")
-		GeneratePingsFromMasternodeFile("./masternode.txt", pingChannel, queue, magicMessage, sentinelVersion)
+		phantom.GeneratePingsFromMasternodeFile("./masternode.txt", pingChannel, queue, magicMessage, sentinelVersion, daemonVersion)
 		time.Sleep(time.Minute * 10)
 	}
 }
 
-func processNewHashes(hashChannel chan chainhash.Hash, queue *Queue) {
+func processNewHashes(hashChannel chan chainhash.Hash, queue *internal.Queue) {
 	for {
 		hash := <-hashChannel
 
 		//log.Println("Adding hash to queue: ", hash.String(), "(", queue.count, ")")
 
 		queue.Push(&hash)
-		for queue.count > 12 { //clear the queue until we're at 12 entries
+		for queue.Len() > 12 { //clear the queue until we're at 12 entries
 			queue.Pop()
 			//log.Println("Removing hash from queue: ", popped.String(), "(", queue.count, ")")
 		}
@@ -245,7 +249,7 @@ func processNewAddresses(addrChannel chan wire.NetAddress, peerSet map[string]wi
 	}
 }
 
-func getNextPeer(connectionSet map[string]*PingerConnection, peerSet map[string]wire.NetAddress) (returnValue wire.NetAddress, err error) {
+func getNextPeer(connectionSet map[string]*phantom.PingerConnection, peerSet map[string]wire.NetAddress) (returnValue wire.NetAddress, err error) {
 	for peer := range peerSet {
 		if _, ok := connectionSet[peer]; !ok {
 			//we have a peer that isn't in the conncetion list return it
@@ -262,7 +266,7 @@ func getNextPeer(connectionSet map[string]*PingerConnection, peerSet map[string]
 	return returnValue, errors.New("No peers found.")
 }
 
-func sendPings(connectionSet map[string]*PingerConnection, peerSet map[string]wire.NetAddress, pingChannel chan MasternodePing, addrChannel chan  wire.NetAddress, hashChannel chan chainhash.Hash, waitGroup sync.WaitGroup) {
+func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[string]wire.NetAddress, pingChannel chan phantom.MasternodePing, addrChannel chan  wire.NetAddress, hashChannel chan chainhash.Hash, waitGroup sync.WaitGroup) {
 
 	time.Sleep(10 * time.Second) //hack to work around .Wait() race condition on fast start-ups
 
@@ -282,7 +286,7 @@ func sendPings(connectionSet map[string]*PingerConnection, peerSet map[string]wi
 
 		//send the ping
 		// Iterate through list and print its contents.
-		var newConnectionSet = make(map[string]*PingerConnection)
+		var newConnectionSet = make(map[string]*phantom.PingerConnection)
 
 		for _, pinger := range connectionSet {
 			status := pinger.GetStatus()
@@ -327,11 +331,11 @@ func sendPings(connectionSet map[string]*PingerConnection, peerSet map[string]wi
 					continue
 				}
 
-				newPingChannel := make(chan MasternodePing, 1500)
+				newPingChannel := make(chan phantom.MasternodePing, 1500)
 
 				// intentionally don't provide a bootstraphash to prevent
 				// duplicate data downloads for unneeded blocks
-				newPinger := PingerConnection{
+				newPinger := phantom.PingerConnection{
 					MagicBytes: 	magicBytes,
 					IpAddress:      peer.IP.String(),
 					Port:           peer.Port,
@@ -358,15 +362,4 @@ func sendPings(connectionSet map[string]*PingerConnection, peerSet map[string]wi
 	}
 
 	waitGroup.Done()
-}
-
-func convertVersionStringToInt(str string) uint32 {
-	version := 0
-	parts := strings.Split(str, ".")
-	for _, part := range parts {
-		version <<= 8
-		value, _ := strconv.Atoi(part)
-		version |= value
-	}
-	return uint32(version)
 }

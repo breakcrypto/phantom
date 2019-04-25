@@ -27,11 +27,11 @@
 *    it in the license file.
 */
 
-package main
+package internal
 
 import "fmt"
 
-func Preamble() {
+func Preamble(version string) {
 	fmt.Println()
 	fmt.Println()
 	fmt.Println(`/**`)
@@ -63,7 +63,7 @@ func Preamble() {
 	fmt.Println(`*    it in the license file.`)
 	fmt.Println(`*/`)
 	fmt.Println()
-	fmt.Printf("--- breakcrypto's phantoms ( v. %s ) ---\n", VERSION)
+	fmt.Printf("--- breakcrypto's phantoms ( v. %s ) ---\n", version)
 	fmt.Println()
 	fmt.Println("email: breakcrypto@gmail.com")
 	fmt.Println("twitter: @_breakcrypto")

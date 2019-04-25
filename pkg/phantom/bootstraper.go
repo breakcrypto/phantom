@@ -27,7 +27,7 @@
 *    it in the license file.
 */
 
-package main
+package phantom
 
 import (
 	"io/ioutil"

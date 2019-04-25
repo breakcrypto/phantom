@@ -27,7 +27,7 @@
 *    it in the license file.
 */
 
-package main
+package phantom
 
 import (
 	"bufio"
@@ -39,7 +39,8 @@ import (
 	"github.com/btcsuite/btcutil"
 	"log"
 	"os"
-	"phantom/socket/wire"
+	"phantom/pkg/socket/wire"
+	"phantom/internal"
 	"sort"
 	"strconv"
 	"strings"
@@ -55,7 +56,7 @@ type MasternodePing struct {
 	MagicMessage string
 	SentinelVersion uint32
 	DaemonVersion uint32
-	HashQueue *Queue
+	HashQueue *internal.Queue
 }
 
 type pingSlice []MasternodePing
@@ -89,7 +90,8 @@ func determinePingTime(unixTime string) (time.Time) {
 	return base.Add(result)
 }
 
-func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan MasternodePing, queue *Queue, magicMessage string, sentinelVersion uint32) {
+func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan MasternodePing, queue *internal.Queue,
+	magicMessage string, sentinelVersion uint32, daemonVersion uint32) {
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -124,7 +126,7 @@ func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan Masternod
 
 }
 
-func (ping *MasternodePing) GenerateMasternodePing() (wire.MsgMNP){
+func (ping *MasternodePing) GenerateMasternodePing(sentinelVersion uint32, daemonVersion uint32) (wire.MsgMNP){
 	mnp := wire.MsgMNP{}
 
 	//add sentinel support

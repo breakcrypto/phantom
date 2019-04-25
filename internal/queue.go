@@ -27,7 +27,7 @@
 *    it in the license file.
 */
 
-package main
+package internal
 
 import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
