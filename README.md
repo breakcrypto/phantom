@@ -23,10 +23,10 @@ Phantoms have been released to make it easier, and less costly, for masternode s
 
 # Downloads
 
-* [Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-windows-amd64.exe)
-* [Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-linux-amd64)
-* [OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-darwin-amd64)
-* [ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-linux-arm)
+* [Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.2/phantom-windows-amd64.exe)
+* [Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.2/phantom-linux-amd64)
+* [OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.2/phantom-darwin-amd64)
+* [ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.2/phantom-linux-arm)
 
 # Setup 
 
