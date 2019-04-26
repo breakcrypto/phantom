@@ -322,7 +322,6 @@ func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[s
 
 		if sleepTime > 0 {
 			fmt.Println("Sleeping for ", sleepTime.String())
-			//log.Println("SLEEPING FOR: " + sleepTime.String())
 			time.Sleep(sleepTime)
 		}
 

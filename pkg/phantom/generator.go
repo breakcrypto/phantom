@@ -118,6 +118,7 @@ func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan Masternod
 		if len(fields) == 5 {
 			log.Println("No epoch time found for: ", fields[0], " assuming one.")
 			fields = append(fields, strconv.FormatInt(currentTime.Add(time.Duration(i*5) * time.Second).Unix() - 540, 10))
+			i++
 		}
 
 		if len(fields) != 6 {
@@ -131,8 +132,6 @@ func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan Masternod
 		}
 
 		pings = append(pings, MasternodePing{fields[0], fields[3], uint32(outputIndex), fields[2], determinePingTime(fields[5]), magicMessage, sentinelVersion, daemonVersion, queue})
-
-		i++
 	}
 
 	//sort the pings by time
