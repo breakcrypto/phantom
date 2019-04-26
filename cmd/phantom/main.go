@@ -35,12 +35,10 @@ import (
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"log"
-	"net"
 	"phantom/pkg/socket/wire"
 	"phantom/pkg/phantom"
 	"phantom/internal"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -56,6 +54,7 @@ var bootstrapHash chainhash.Hash
 var bootstrapExplorer string
 var sentinelVersion uint32
 var daemonVersion uint32
+var masternodeConf string
 
 const VERSION = "0.0.2"
 
@@ -75,9 +74,10 @@ func main() {
 	flag.UintVar(&protocolNum, "protocol_number", 0, "the protocol number to connect and ping with")
 	flag.StringVar(&magicMessage, "magic_message", "", "the signing message")
 	flag.BoolVar(&magicMsgNewLine, "magic_message_newline", true, "add a new line to the magic message")
-	flag.StringVar(&bootstrapIPs, "bootstrap_ips", "", "IP address to bootstrap the network")
+	flag.StringVar(&bootstrapIPs, "bootstrap_ips", "", "IP addresses to bootstrap the network (i.e. \"1.1.1.1:1234,2.2.2.2:1234\")")
 	flag.StringVar(&bootstrapHashStr, "bootstrap_hash", "", "Hash to bootstrap the pings with ( top - 12 )")
 	flag.StringVar(&bootstrapExplorer, "bootstrap_url", "", "Explorer to bootstrap from.")
+	flag.StringVar(&masternodeConf, "masternode_conf", "masternode.txt", "Name of the file to load the masternode information from.")
 
 	var sentinelString string
 	var daemonString string
@@ -113,14 +113,16 @@ func main() {
 
 	var waitGroup sync.WaitGroup
 
-	addresses := splitAddressList(bootstrapIPs)
+	if bootstrapIPs != "" {
+		addresses := phantom.SplitAddressList(bootstrapIPs)
 
-	if uint(len(addresses)) > maxConnections {
-		log.Fatal("The number of bootstrap IPs is larger than the number of max connections, please try again.")
-	}
+		if uint(len(addresses)) > maxConnections {
+			addresses = addresses[:maxConnections-1]
+		}
 
-	for _, address := range addresses {
-		peerSet[address.IP.String()] = address
+		for _, address := range addresses {
+			peerSet[address.IP.String()] = address
+		}
 	}
 
 	addrProcessingChannel := make(chan wire.NetAddress, 1500)
@@ -141,6 +143,17 @@ func main() {
 		if bootstrapHash == empthHash {
 			log.Fatal("Unable to bootstrap using the explorer url provided. Invalid result returned.")
 		}
+
+		peers, _ := bootstrapper.LoadPossiblePeers(uint16(1929))
+
+		for _, peer := range peers {
+			if len(peerSet) < int(maxConnections) {
+				peerSet[peer.IP.String()] = peer
+			} else {
+				break //exit early
+			}
+		}
+
 	} else {
 		chainhash.Decode(&bootstrapHash,bootstrapHashStr)
 		hashQueue.Push(&bootstrapHash)
@@ -201,24 +214,11 @@ func main() {
 	waitGroup.Wait()
 }
 
-func splitAddressList(bootstraps string) (addresses []wire.NetAddress) {
-	for _, bootstrap := range strings.Split(bootstraps, ",") {
-		ipPort := strings.Split(bootstrap, ":")
-		ip := ipPort[0]
-		port, _ := strconv.Atoi(ipPort[1])
-		addresses = append(addresses, wire.NetAddress{time.Now(),
-			0,
-			net.ParseIP(ip),
-			uint16(port)})
-	}
-	return addresses
-}
-
 func generatePings(pingChannel chan phantom.MasternodePing, queue *internal.Queue, magicMessage string) {
 	for {
 
-		fmt.Println("Loading settings from masternode.txt")
-		phantom.GeneratePingsFromMasternodeFile("./masternode.txt", pingChannel, queue, magicMessage, sentinelVersion, daemonVersion)
+		fmt.Println("Loading settings.")
+		phantom.GeneratePingsFromMasternodeFile(masternodeConf, pingChannel, queue, magicMessage, sentinelVersion, daemonVersion)
 		time.Sleep(time.Minute * 10)
 	}
 }
