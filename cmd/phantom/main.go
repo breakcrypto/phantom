@@ -35,9 +35,8 @@ import (
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"log"
-	"phantom/pkg/socket/wire"
-	"phantom/pkg/phantom"
-	"phantom/internal"
+	"github.com/breakcrypto/phantom/pkg/socket/wire"
+	"github.com/breakcrypto/phantom/pkg/phantom"
 	"strconv"
 	"sync"
 	"time"
@@ -168,7 +167,7 @@ func main() {
 	addrProcessingChannel := make(chan wire.NetAddress, 1500)
 	hashProcessingChannel := make(chan chainhash.Hash, 1500)
 
-	hashQueue := internal.NewQueue(12)
+	hashQueue := phantom.NewQueue(12)
 
 	if bootstrapExplorer != "" {
 		bootstrapper := phantom.Bootstrapper{bootstrapExplorer}
@@ -199,7 +198,7 @@ func main() {
 		hashQueue.Push(&bootstrapHash)
 	}
 
-	internal.Preamble(VERSION)
+	phantom.Preamble(VERSION)
 
 	time.Sleep(10 * time.Second)
 
@@ -256,7 +255,7 @@ func main() {
 	waitGroup.Wait()
 }
 
-func generatePings(pingChannel chan phantom.MasternodePing, queue *internal.Queue, magicMessage string) {
+func generatePings(pingChannel chan phantom.MasternodePing, queue *phantom.Queue, magicMessage string) {
 	for {
 
 		fmt.Println("Loading settings.")
@@ -265,7 +264,7 @@ func generatePings(pingChannel chan phantom.MasternodePing, queue *internal.Queu
 	}
 }
 
-func processNewHashes(hashChannel chan chainhash.Hash, queue *internal.Queue) {
+func processNewHashes(hashChannel chan chainhash.Hash, queue *phantom.Queue) {
 	for {
 		hash := <-hashChannel
 

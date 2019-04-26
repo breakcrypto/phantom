@@ -39,8 +39,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"log"
 	"os"
-	"phantom/pkg/socket/wire"
-	"phantom/internal"
+	"github.com/breakcrypto/phantom/pkg/socket/wire"
 	"sort"
 	"strconv"
 	"strings"
@@ -56,7 +55,7 @@ type MasternodePing struct {
 	MagicMessage string
 	SentinelVersion uint32
 	DaemonVersion uint32
-	HashQueue *internal.Queue
+	HashQueue *Queue
 }
 
 type pingSlice []MasternodePing
@@ -90,7 +89,7 @@ func determinePingTime(unixTime string) (time.Time) {
 	return base.Add(result)
 }
 
-func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan MasternodePing, queue *internal.Queue,
+func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan MasternodePing, queue *Queue,
 	magicMessage string, sentinelVersion uint32, daemonVersion uint32) {
 
 	currentTime := time.Now().UTC()
