@@ -93,6 +93,8 @@ func determinePingTime(unixTime string) (time.Time) {
 func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan MasternodePing, queue *internal.Queue,
 	magicMessage string, sentinelVersion uint32, daemonVersion uint32) {
 
+	currentTime := time.Now().UTC()
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		log.Fatal(err)
@@ -102,6 +104,8 @@ func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan Masternod
 	pings := make(pingSlice, 0)
 
 	scanner := bufio.NewScanner(file)
+
+	i := 0
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(line) < 1 || line[0] == '#' {
@@ -113,7 +117,7 @@ func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan Masternod
 		//add an epoch if missing and alert
 		if len(fields) == 5 {
 			log.Println("No epoch time found for: ", fields[0], " assuming one.")
-			fields = append(fields, strconv.FormatInt(time.Now().UTC().Unix(), 10))
+			fields = append(fields, strconv.FormatInt(currentTime.Add(time.Duration(i*5) * time.Second).Unix() - 540, 10))
 		}
 
 		if len(fields) != 6 {
@@ -128,6 +132,7 @@ func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan Masternod
 
 		pings = append(pings, MasternodePing{fields[0], fields[3], uint32(outputIndex), fields[2], determinePingTime(fields[5]), magicMessage, sentinelVersion, daemonVersion, queue})
 
+		i++
 	}
 
 	//sort the pings by time
