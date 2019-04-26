@@ -11,6 +11,8 @@ The phantom daemon is custom built wallet designed to replicate only what is req
 * email: breakcrypto@gmail.com
 * twitter: @_breakcrypto
 * discord: breakcrypto#0011
+* discord channel: https://discord.gg/RmUcbY
+* bitcoin talk discussion: https://bitcointalk.org/index.php?topic=5136453.0
 
 ## Donation Addresses
 BTC: 151HTde9NgwbMMbMmqqpJYruYRL4SLZg1S
@@ -22,6 +24,16 @@ DOGE: DBahutcjEAxfwQEW7kzft2y8dhZN2VtcG5
 # A note from the developer
 
 Phantoms have been released to make it easier, and less costly, for masternode supporters to host their own nodes. Masternode hosting companies are free to utilize the phantom system as long as they comply with the terms of the Server Side Public License. 
+
+# Quick start
+
+Download a binary release from below. See if there's a coin configuration for the coin you're wishing to use. If not, you'll need to locate the proper settings. There are notes below on where to look or feel free to ask on discord, reddit, or btct. If there is a coin conf for your coin then switching over to phantoms is easy:
+
+```
+./phantom -coin_conf="/path/to/coin.conf" -masternode_conf="/path/to/masternode.conf"
+```
+
+That's it. You do not need to restart your masternodes, you don't need to change IP addresses, etc. Once the phantom daemon is running, you can disable your masternode daemons, cancel most of VPS subscriptions, and enjoy the savings. You'll know the phantoms are working when you see the active time refresh (can take up to 20 minutes). If that active time doesn't update, restart your daemons and check the settings.
 
 # Downloads
 
