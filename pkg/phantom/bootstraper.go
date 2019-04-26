@@ -30,15 +30,26 @@
 package phantom
 
 import (
+	"encoding/json"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"phantom/pkg/socket/wire"
 	"strconv"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
 
 type Bootstrapper struct {
 	BaseURL string
+}
+
+type GetPeerInfoResponse struct {
+	PossiblePeers []PossiblePeer
+}
+
+type PossiblePeer struct {
+	Addr            string        `json:"addr"`
+	Addrlocal       string        `json:"addrlocal"`
 }
 
 func (b Bootstrapper) LoadBlockHash() (chainhash.Hash, error) {
@@ -77,4 +88,49 @@ func (b Bootstrapper) LoadBlockHash() (chainhash.Hash, error) {
 	chainhash.Decode(&bootstrapHash,strBlockHash)
 
 	return bootstrapHash, nil
+}
+
+func (b Bootstrapper) LoadPossiblePeers(portFilter uint16) ([]wire.NetAddress, error) {
+	var possiblePeers []wire.NetAddress
+
+	response, err := http.Get(b.BaseURL + "/api/getpeerinfo")
+	if err != nil {
+		log.Printf("%s", err)
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Printf("%s", err)
+		return nil, err
+	}
+
+	var s = new([]PossiblePeer)
+	err = json.Unmarshal(body, &s)
+	if err != nil {
+		log.Printf("%s", err)
+		return nil, err
+	}
+
+	for _, possiblePeer := range *s {
+		possible1 := SplitAddress(possiblePeer.Addr)
+		possible2 := SplitAddress(possiblePeer.Addrlocal)
+
+		possiblePeers = addPossiblePeer(possible1, possiblePeers, portFilter)
+		possiblePeers = addPossiblePeer(possible2, possiblePeers, portFilter)
+	}
+
+	return possiblePeers, nil
+}
+
+func addPossiblePeer(peer wire.NetAddress, peers []wire.NetAddress, portFilter uint16) []wire.NetAddress {
+	if peer.Port == portFilter {
+		for _, prevPeer := range peers {
+			if peer.IP.String() == prevPeer.IP.String() && peer.Port == prevPeer.Port {
+				return peers
+			}
+		}
+		return append(peers, peer)
+	}
+	return peers
 }

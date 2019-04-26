@@ -61,7 +61,7 @@ func (q *Queue) Push(n *chainhash.Hash) {
 	//see if n is in the queue (inefficient but good enough for now)
 	for _, node := range q.nodes {
 		if node != nil && node.String() == n.String() {
-			log.Println("Duplicate hash found, skipping.")
+			log.Println("Duplicate hash found - all is well.")
 			return //skip a hash that we already have
 		}
 	}

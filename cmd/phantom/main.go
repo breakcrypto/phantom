@@ -55,6 +55,7 @@ var bootstrapExplorer string
 var sentinelVersion uint32
 var daemonVersion uint32
 var masternodeConf string
+var coinCon phantom.CoinConf
 
 const VERSION = "0.0.2"
 
@@ -67,6 +68,12 @@ func main() {
 	var magicMsgNewLine bool
 	var protocolNum uint
 	var bootstrapHashStr string
+	var sentinelString string
+	var daemonString string
+	var coinConfString string
+
+	flag.StringVar(&coinConfString, "coin_conf", "", "Name of the file to load the coin information from.")
+	flag.StringVar(&masternodeConf, "masternode_conf", "masternode.txt", "Name of the file to load the masternode information from.")
 
 	flag.UintVar(&maxConnections, "max_connections", 10, "the number of peers to maintain")
 	flag.StringVar(&magicHex, "magicbytes", "", "a hex string for the magic bytes")
@@ -77,15 +84,48 @@ func main() {
 	flag.StringVar(&bootstrapIPs, "bootstrap_ips", "", "IP addresses to bootstrap the network (i.e. \"1.1.1.1:1234,2.2.2.2:1234\")")
 	flag.StringVar(&bootstrapHashStr, "bootstrap_hash", "", "Hash to bootstrap the pings with ( top - 12 )")
 	flag.StringVar(&bootstrapExplorer, "bootstrap_url", "", "Explorer to bootstrap from.")
-	flag.StringVar(&masternodeConf, "masternode_conf", "masternode.txt", "Name of the file to load the masternode information from.")
-
-	var sentinelString string
-	var daemonString string
 
 	flag.StringVar(&sentinelString, "sentinel_version", "0.0.0", "The string to use for the sentinel version number (i.e. 1.20.0)")
 	flag.StringVar(&daemonString, "daemon_version", "0.0.0.0", "The string to use for the sentinel version number (i.e. 1.20.0)")
 
 	flag.Parse()
+
+	if coinConfString != "" {
+		coinInfo, err := phantom.LoadCoinConf(coinConfString)
+		if err != nil {
+			log.Println("Error reading coin configuration information from:", coinConfString)
+		} else {
+			//load all the flags with the coin conf information
+			//only overwrite default values
+			if magicHex == "" {
+				magicHex = coinInfo.Magicbytes
+			}
+			if defaultPort == 0 {
+				defaultPort = coinInfo.Port
+			}
+			if protocolNum == 0 {
+				protocolNum = coinInfo.ProtocolNumber
+			}
+			if magicMessage == "" {
+				magicMessage = coinInfo.MagicMessage
+			}
+			if magicMsgNewLine && !coinInfo.MagicMessageNewline {
+				magicMsgNewLine = false
+			}
+			if bootstrapIPs == "" {
+				bootstrapIPs = coinInfo.BootstrapIPs
+			}
+			if bootstrapExplorer == "" {
+				bootstrapExplorer = coinInfo.BootstrapURL
+			}
+			if sentinelString == "" {
+				sentinelString = coinInfo.SentinelVersion
+			}
+			if daemonString == "" {
+				daemonString = coinInfo.DaemonVersion
+			}
+		}
+	}
 
 	magicMsgNewLine = true
 
@@ -164,6 +204,8 @@ func main() {
 	time.Sleep(10 * time.Second)
 
 	fmt.Println("--USING THE FOLLOWING SETTINGS--")
+	fmt.Println("Coin configuration: ", coinConfString)
+	fmt.Println("Masternode configuration: ", masternodeConf)
 	fmt.Println("Magic Bytes: ", magicHex)
 	fmt.Println("Magic Message: ", magicMessage)
 	fmt.Println("Magic Message Newline: ", magicMsgNewLine)

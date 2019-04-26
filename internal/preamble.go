@@ -67,7 +67,7 @@ func Preamble(version string) {
 	fmt.Println()
 	fmt.Println("email: breakcrypto@gmail.com")
 	fmt.Println("twitter: @_breakcrypto")
-	fmt.Println("discord: break")
+	fmt.Println("discord: breakcrypto#0011")
 	fmt.Println()
 	fmt.Println("Donation addresses:")
 	fmt.Println("BTC: 151HTde9NgwbMMbMmqqpJYruYRL4SLZg1S")
