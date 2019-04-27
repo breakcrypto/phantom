@@ -113,8 +113,16 @@ func (b Bootstrapper) LoadPossiblePeers(portFilter uint16) ([]wire.NetAddress, e
 	}
 
 	for _, possiblePeer := range *s {
-		possible1 := SplitAddress(possiblePeer.Addr)
-		possible2 := SplitAddress(possiblePeer.Addrlocal)
+		var possible1 wire.NetAddress
+		var possible2 wire.NetAddress
+
+		if possiblePeer.Addr != "" {
+			possible1 = SplitAddress(possiblePeer.Addr)
+		}
+
+		if possiblePeer.Addrlocal != "" {
+			possible2 = SplitAddress(possiblePeer.Addrlocal)
+		}
 
 		possiblePeers = addPossiblePeer(possible1, possiblePeers, portFilter)
 		possiblePeers = addPossiblePeer(possible2, possiblePeers, portFilter)
