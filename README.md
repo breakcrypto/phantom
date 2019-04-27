@@ -37,10 +37,10 @@ That's it. You do not need to restart your masternodes, you don't need to change
 
 # Downloads
 
-* [Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.2/phantom-windows-amd64.exe)
-* [Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.2/phantom-linux-amd64)
-* [OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.2/phantom-darwin-amd64)
-* [ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.2/phantom-linux-arm)
+* [Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-windows-amd64.exe)
+* [Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-linux-amd64)
+* [OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-darwin-amd64)
+* [ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-linux-arm)
 
 # Setup 
 
