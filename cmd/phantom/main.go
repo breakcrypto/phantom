@@ -55,6 +55,7 @@ var sentinelVersion uint32
 var daemonVersion uint32
 var masternodeConf string
 var coinCon phantom.CoinConf
+var userAgent string
 
 const VERSION = "0.0.4"
 
@@ -86,6 +87,9 @@ func main() {
 
 	flag.StringVar(&sentinelString, "sentinel_version", "0.0.0", "The string to use for the sentinel version number (i.e. 1.20.0)")
 	flag.StringVar(&daemonString, "daemon_version", "0.0.0.0", "The string to use for the sentinel version number (i.e. 1.20.0)")
+
+	flag.StringVar(&userAgent, "user_agent", "@_breakcrypto phantom", "The user agent string to connect to remote peers with.")
+
 
 	flag.Parse()
 
@@ -122,6 +126,9 @@ func main() {
 			}
 			if daemonString == "" {
 				daemonString = coinInfo.DaemonVersion
+			}
+			if userAgent == "@_breakcrypto phantom" && coinInfo.UserAgent != "" {
+				userAgent = coinInfo.UserAgent
 			}
 		}
 	}
@@ -245,7 +252,7 @@ func main() {
 		//make a client
 		connectionSet[pinger.IpAddress] = &pinger
 
-		go pinger.Start()
+		go pinger.Start(userAgent)
 	}
 
 	pingGeneratorChannel := make(chan phantom.MasternodePing, 1500)
@@ -397,7 +404,7 @@ func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[s
 				//connectionList = nil //release for the GC
 
 				waitGroup.Add(1)
-				go newPinger.Start()
+				go newPinger.Start(userAgent)
 
 				fmt.Println("Opened a new connection to ", newPinger.IpAddress)
 			}

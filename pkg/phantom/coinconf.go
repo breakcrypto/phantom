@@ -18,6 +18,7 @@ type CoinConf struct {
 	SentinelVersion     string `json:"sentinel_version,omitempty""`
 	DaemonVersion       string `json:"daemon_version,omitempty""`
 	BootstrapIPs        string `json:"bootstrap_ips,omitempty""`
+	UserAgent        	string `json:"user_agent,omitempty""`
 }
 
 func LoadCoinConf(path string) (CoinConf, error) {

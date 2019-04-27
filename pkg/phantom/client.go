@@ -58,7 +58,7 @@ type PingerConnection struct {
 	Mutex sync.Mutex
 }
 
-func (pinger *PingerConnection) Start() {
+func (pinger *PingerConnection) Start(userAgent string) {
 
 	log.Printf("%s : STARTING CLIENT\n", pinger.IpAddress)
 
@@ -92,7 +92,7 @@ func (pinger *PingerConnection) Start() {
 		AddrYou:         you,
 		AddrMe:          me,
 		Nonce:           0xDEADBEEF,
-		UserAgent:       "@_breakcrypto phantom",
+		UserAgent:       userAgent,
 		LastBlock:       0,
 		DisableRelayTx:  true,
 	}
