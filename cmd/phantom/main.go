@@ -170,6 +170,11 @@ func main() {
 	hashQueue := phantom.NewQueue(12)
 
 	if bootstrapExplorer != "" {
+		//check for a trailing slash
+		if bootstrapExplorer[len(bootstrapExplorer)-1] == '/' {
+			bootstrapExplorer = bootstrapExplorer[0:len(bootstrapExplorer)-1]
+		}
+
 		bootstrapper := phantom.Bootstrapper{bootstrapExplorer}
 		var err error
 		bootstrapHash, err = bootstrapper.LoadBlockHash()
