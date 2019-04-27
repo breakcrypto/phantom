@@ -56,7 +56,7 @@ var daemonVersion uint32
 var masternodeConf string
 var coinCon phantom.CoinConf
 
-const VERSION = "0.0.2"
+const VERSION = "0.0.4"
 
 func main() {
 
@@ -188,7 +188,7 @@ func main() {
 			log.Fatal("Unable to bootstrap using the explorer url provided. Invalid result returned.")
 		}
 
-		peers, _ := bootstrapper.LoadPossiblePeers(uint16(1929))
+		peers, _ := bootstrapper.LoadPossiblePeers(uint16(defaultPort))
 
 		for _, peer := range peers {
 			if len(peerSet) < int(maxConnections) {
