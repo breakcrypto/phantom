@@ -14,7 +14,7 @@ type CoinConf struct {
 	ProtocolNumber      uint    `json:"protocol_number"`
 	MagicMessage        string `json:"magic_message"`
 	MagicMessageNewline bool   `json:"magic_message_newline,omitempty"`
-	BootstrapURL        string `json:"bootstrap_url"`
+	BootstrapURL        string `json:"bootstrap_url,omitempty"`
 	SentinelVersion     string `json:"sentinel_version,omitempty""`
 	DaemonVersion       string `json:"daemon_version,omitempty""`
 	BootstrapIPs        string `json:"bootstrap_ips,omitempty""`
