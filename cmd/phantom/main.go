@@ -56,7 +56,7 @@ var daemonVersion uint32
 var masternodeConf string
 var coinCon phantom.CoinConf
 
-const VERSION = "0.0.2"
+const VERSION = "0.0.3"
 
 func main() {
 
