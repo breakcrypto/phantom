@@ -27,7 +27,7 @@
 *    it in the license file.
 */
 
-package main
+package phantom
 
 import (
 	"bufio"
@@ -35,7 +35,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"log"
 	"net"
-	"phantom/socket/wire"
+	"github.com/breakcrypto/phantom/pkg/socket/wire"
 	"strconv"
 	"strings"
 	"sync"
@@ -47,6 +47,8 @@ type PingerConnection struct {
 	IpAddress string
 	Port uint16
 	ProtocolNumber uint32
+	SentinelVersion uint32
+	DaemonVersion uint32
 	BootstrapHash chainhash.Hash
 	PingChannel chan MasternodePing
 	AddrChannel chan wire.NetAddress
@@ -231,7 +233,7 @@ func (pinger *PingerConnection) Start() {
 						log.Printf("REQUEST RECIEVED, RELAYING: %s\n",
 							ping.Name)
 
-						mnp := ping.GenerateMasternodePing()
+						mnp := ping.GenerateMasternodePing(pinger.SentinelVersion, pinger.DaemonVersion)
 
 						//serialize to a []byte
 						w := new(bytes.Buffer)
@@ -240,7 +242,7 @@ func (pinger *PingerConnection) Start() {
 
 						inv := wire.MsgInv{}
 						invVec := wire.InvVect{}
-						invVec.Type = 17
+						invVec.Type = 15
 						invVec.Hash = chainhash.DoubleHashH(mnpBytes)
 						inv.AddInvVect(&invVec)
 

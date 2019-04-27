@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cd 'cmd/phantom'
+
 go get -d -v ./...
 go install -v ./...
 
@@ -12,12 +14,12 @@ do
     platform_split=(${platform//\// })
     GOOS=${platform_split[0]}
     GOARCH=${platform_split[1]}
-    output_name=$package_name'-'$GOOS'-'$GOARCH
+    output_name='../../'$package_name'-'$GOOS'-'$GOARCH
     if [ $GOOS = "windows" ]; then
         output_name+='.exe'
     fi
 
-    env GOOS=$GOOS GOARCH=$GOARCH GOARM=7 go build -o $output_name $package
+    env GOOS=$GOOS GOARCH=$GOARCH GOARM=7 go build -o $output_name .
     if [ $? -ne 0 ]; then
         echo 'An error has occurred! Aborting the script execution...'
         exit 1

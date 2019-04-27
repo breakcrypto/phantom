@@ -1,14 +1,18 @@
 # Phantom-node Daemon
 
-Phantom nodes requires no static IP address, no copy of the blockchain, and no proof-of-service. As such, you can run a node on any IP address of your liking: `1.1.1.1` or `8.8.8.8` if you wish. The phantom daemon is extremely lightweight allowing you to run hundreds of nodes from a modest machine if you wished. And, possibly most importantly, you can move your currently running masternodes to phantom nodes without restarting since a real IP address is no longer a requirement.
+Phantom nodes requires no static IP address, no copy of the blockchain, and no proof-of-service. As such, you can run a node on any IP address of your liking: `1.1.1.1` or `8.8.8.8` if you wish. Phantoms also support live hot-swap with currently running nodes, there is no need to re-queue.
+
+The phantom daemon is extremely lightweight allowing you to run hundreds of nodes from a modest machine if you wished. And, possibly most importantly, you can move your currently running masternodes to phantom nodes without restarting since a real IP address is no longer a requirement.
 
 The phantom daemon is custom built wallet designed to replicate only what is required for pre-EVO masternodes to run; it replaces the masternode daemon piece. It does not handle any wallet private keys and has no access to your coins. You will still need a wallet to start your masternodes, but once started, the phatom node system will handle the rest for you.
 
 ## Contact information
 
 * email: breakcrypto@gmail.com
-* twitter: @_breakcrypto
+* twitter: https://twitter.com/_breakcrypto
 * discord: breakcrypto#0011
+* discord channel: https://discord.gg/RmUcbY
+* bitcoin talk discussion: https://bitcointalk.org/index.php?topic=5136453.0
 
 ## Donation Addresses
 BTC: 151HTde9NgwbMMbMmqqpJYruYRL4SLZg1S
@@ -21,12 +25,22 @@ DOGE: DBahutcjEAxfwQEW7kzft2y8dhZN2VtcG5
 
 Phantoms have been released to make it easier, and less costly, for masternode supporters to host their own nodes. Masternode hosting companies are free to utilize the phantom system as long as they comply with the terms of the Server Side Public License. 
 
+# Quick start
+
+Download a binary release from below. See if there's a coin configuration for the coin you're wishing to use. If not, you'll need to locate the proper settings. There are notes below on where to look or feel free to ask on discord, reddit, or btct. If there is a coin conf for your coin then switching over to phantoms is easy:
+
+```
+./phantom -coin_conf="/path/to/coin.conf" -masternode_conf="/path/to/masternode.conf"
+```
+
+That's it. You do not need to restart your masternodes, you don't need to change IP addresses, etc. Once the phantom daemon is running, you can disable your masternode daemons, cancel most of VPS subscriptions, and enjoy the savings. You'll know the phantoms are working when you see the active time refresh (can take up to 20 minutes). If that active time doesn't update, restart your daemons and check the settings.
+
 # Downloads
 
-* [Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-windows-amd64.exe)
-* [Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-linux-amd64)
-* [OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-darwin-amd64)
-* [ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.1/phantom-linux-arm)
+* [Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-windows-amd64.exe)
+* [Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-linux-amd64)
+* [OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-darwin-amd64)
+* [ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-linux-arm)
 
 # Setup 
 

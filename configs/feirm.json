@@ -1,0 +1,9 @@
+{
+  "name":"Feirm",
+  "magicbytes": "9FA4FB4D",
+  "port":4918,
+  "protocol_number":70917,
+  "magic_message":"DarkNet Signed Message:",
+  "magic_message_newline":true,
+  "bootstrap_url":"https://explorer.feirm.com"
+}

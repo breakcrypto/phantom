@@ -1,0 +1,9 @@
+{
+  "name":"Sparks",
+  "magicbytes": "D4C3B21A",
+  "port":8890,
+  "protocol_number":70210,
+  "magic_message":"DarkCoin Signed Message:",
+  "magic_message_newline":true,
+  "bootstrap_url":"http://explorer.sparkspay.io"
+}
