@@ -34,6 +34,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/jackkdev/phantom/pkg/storage"
 	"log"
 	"github.com/breakcrypto/phantom/pkg/socket/wire"
 	"github.com/breakcrypto/phantom/pkg/phantom"
@@ -55,6 +56,7 @@ var sentinelVersion uint32
 var daemonVersion uint32
 var masternodeConf string
 var coinCon phantom.CoinConf
+var dbPath string
 var userAgent string
 
 const VERSION = "0.0.4"
@@ -90,6 +92,7 @@ func main() {
 
 	flag.StringVar(&userAgent, "user_agent", "@_breakcrypto phantom", "The user agent string to connect to remote peers with.")
 
+	flag.StringVar(&dbPath, "db_path", "./peers.db", "The destination for database storage.")
 
 	flag.Parse()
 
@@ -130,7 +133,17 @@ func main() {
 			if userAgent == "@_breakcrypto phantom" && coinInfo.UserAgent != "" {
 				userAgent = coinInfo.UserAgent
 			}
+			if dbPath == "" {
+				dbPath = "peers.db"
+			}
 		}
+	}
+
+	db, err := storage.InitialiseDB("peers.db")
+	if err != nil {
+		log.Fatal("An error occurred initialising the database")
+	} else {
+		log.Println("Database was initialised:", db)
 	}
 
 	magicMsgNewLine = true
@@ -312,6 +325,13 @@ func getNextPeer(connectionSet map[string]*phantom.PingerConnection, peerSet map
 			delete(peerSet, peer)
 
 			log.Println("Found new peer: ", peer)
+
+			// Cache peers
+			db, err := storage.InitialiseDB("peers.dat")
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = storage.CachePeerToDB(db, peer)
 
 			return returnValue, nil
 		}
