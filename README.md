@@ -21,6 +21,18 @@ LTC: LhBx1TUyp7wiYuMxjefAGUGZVzuHRtPBA7
 
 DOGE: DBahutcjEAxfwQEW7kzft2y8dhZN2VtcG5
 
+# Feature
+
+* Fully self-sufficient
+* Minimal memory and disk usage (in the 10s of megabytes vs. gigabytes)
+* Hot-swap with live node daemons, no restart required
+* Select any IP address, no static IP required
+* Auto-load settings from a coinconf.json 
+* Optionally auto-load bootstrap hashes and peers from Iquidus explorers (more APIs coming soon)
+* Epoch timestamp support for high-availability deterministic pings
+* Use your existing masternode.conf if you don't want deterministic pings
+* Runs on windows, linux, mac, arm, and more.
+
 # A note from the developer
 
 Phantoms have been released to make it easier, and less costly, for masternode supporters to host their own nodes. Masternode hosting companies are free to utilize the phantom system as long as they comply with the terms of the Server Side Public License. 
@@ -37,10 +49,10 @@ That's it. You do not need to restart your masternodes, you don't need to change
 
 # Downloads
 
-* [Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-windows-amd64.exe)
-* [Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-linux-amd64)
-* [OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-darwin-amd64)
-* [ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.3/phantom-linux-arm)
+* [Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.4/phantom-windows-amd64.exe)
+* [Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.4/phantom-linux-amd64)
+* [OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.4/phantom-darwin-amd64)
+* [ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.4/phantom-linux-arm)
 
 # Setup 
 
@@ -74,39 +86,41 @@ comments removed, epoch timestamp added to the end.
 ./phantom -magicbytes="E4D2411C" -port=1929 -protocol_number=70209 -magic_message="ProtonCoin Signed Message:" -bootstrap_ips="51.15.236.48:1929" -bootstrap_url="http://explorer.anodoscrypto.com:3001" -max_connections=10
 ```
 
-## Coin recipes that have been tested
+## Coin configurations exist for
 
-**ANDS**
+* $PAC
+* ANDS
+* BEET 
+* BITG 
+* CDM 
+* DEV
+* DKPC
+* FEIRM
+* GBX
+* GIC
+* HLM
+* LPC
+* MARC
+* MILL
+* OMEGA
+* PIVX
+* POLIS
+* PRX
+* RAPID
+* SINS
+* SLX
+* SMART
+* SPARKS
+* SYS
+* TELOS
+* WGR
+* WOLF
+* XAP
+* XBI
+* XLQ
+* XZC
 
-* magic_hex = "E4D2411C"
-* magic_message = "ProtonCoin Signed Message:"
-* port = 1929
-* protocol_number = 70209
-* bootstrap_url = http://explorer.anodoscrypto.com:3001
-
-**$PAC** 
-
-* magic_hex = "2C61E5C8"
-* magic_message = "DarkCoin Signed Message:"
-* port = 7112
-* protocol_number = 70215
-* bootstrap_url = http://explorer.paccoin.net
-
-**SPARKS**
-
-* magic_hex = "D4C3B21A"
-* magic_message = "DarkCoin Signed Message:"
-* port = 8890
-* protocol_number = 70210
-* bootstrap_url = http://explorer.sparkspay.io
-
-**XBI**
-
-* magic_hex = "FEF8A489"
-* magic_message = "DarkNet Signed Message:"
-* port = 7339
-* protocol_number = 70997
-* boostrap_url = http://explorer.bitcoinincognito.org
+There is a coinconf generator included that can auto-generate settings for most masternode coins. Check the `tools/coinconf` directory.
 
 ## Available Flags
 
@@ -117,6 +131,8 @@ comments removed, epoch timestamp added to the end.
     	IP address to bootstrap the network
   -bootstrap_url string
     	Explorer to bootstrap from.
+  -coin_conf
+      Name of the file to load the coin information from.
   -daemon_version string
     	The string to use for the sentinel version number (i.e. 1.20.0) (default "0.0.0.0")
   -magic_message string
@@ -125,6 +141,8 @@ comments removed, epoch timestamp added to the end.
     	add a new line to the magic message (default true)
   -magicbytes string
     	a hex string for the magic bytes
+  -masternode_conf
+      Name of the file to load the masternode information from.
   -max_connections uint
     	the number of peers to maintain (default 10)
   -port uint
@@ -133,32 +151,9 @@ comments removed, epoch timestamp added to the end.
     	the protocol number to connect and ping with
   -sentinel_version string
     	The string to use for the sentinel version number (i.e. 1.20.0) (default "0.0.0")
+  -user_agent
+      The user agent string to connect to remote peers with.
 ```
-
-**Hints on where to get the information**
-
-* magicbytes
-  * chainparams.cpp
-  * pchMessageStart[3] + pchMessageStart[2] + pchMessageStart[1] + pchMessageStart[0]
-  
-* magic_message
-  * main.cpp or validation.cpp
-  * strMessageMagic 
-  
-* default_port
-  * chainparams.cpp
-  * nDefaultPort
-  
-* protocol_version
-  * PROTOCOL_VERSION
-  * version.h
-  
-* sentinel_version
-  * converted form of DEFAULT_SENTINEL_VERSION from masternode.h or
-  * CLIENT_SENTINEL_VERSION from clientversion.h
-  
-* daemon_version
-  * CLIENT_MASTERNODE_VERSION from clientversion.h
 
 ## Building (using Docker)
 
