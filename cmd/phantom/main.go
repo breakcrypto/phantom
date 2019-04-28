@@ -59,6 +59,8 @@ var coinCon phantom.CoinConf
 var dbPath string
 var userAgent string
 
+var cachedPeers error
+
 const VERSION = "0.0.4"
 
 func main() {
@@ -145,6 +147,8 @@ func main() {
 	} else {
 		log.Println("Database was initialised:", db)
 	}
+
+	cachedPeers = storage.LoadPeersFromDB(db)
 
 	magicMsgNewLine = true
 
@@ -321,17 +325,17 @@ func getNextPeer(connectionSet map[string]*phantom.PingerConnection, peerSet map
 			//we have a peer that isn't in the conncetion list return it
 			returnValue = peerSet[peer]
 
-			//remove the peer from the connection list
-			delete(peerSet, peer)
-
-			log.Println("Found new peer: ", peer)
-
 			// Cache peers
-			db, err := storage.InitialiseDB("peers.dat")
+			db, err := storage.InitialiseDB("peers.db")
 			if err != nil {
 				log.Fatal(err)
 			}
 			err = storage.CachePeerToDB(db, peer)
+
+			//remove the peer from the connection list
+			delete(peerSet, peer)
+
+			log.Println("Found new peer: ", peer)
 
 			return returnValue, nil
 		}

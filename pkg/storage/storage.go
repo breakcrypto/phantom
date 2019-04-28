@@ -50,19 +50,23 @@ func CachePeerToDB(db *bolt.DB, peer string) error {
 	})
 
 	log.Println("Peer added to cache", entry)
+	defer db.Close()
+
 	return err
 }
 
 func LoadPeersFromDB(db *bolt.DB) error {
 	err := db.View(func(tx *bolt.Tx) error {
 		peers := tx.Bucket([]byte("peers")).Get([]byte("peer"))
-		log.Println("Peers: %s\n", peers)
+		log.Println("Peers:\n", string(peers))
 		return nil
 	})
 
 	if err != nil {
 		return err
 	}
+
+	defer db.Close()
 
 	return nil
 }
