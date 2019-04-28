@@ -34,7 +34,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/jackkdev/phantom/pkg/storage"
+	"github.com/breakcrypto/phantom/pkg/storage"
 	"log"
 	"github.com/breakcrypto/phantom/pkg/socket/wire"
 	"github.com/breakcrypto/phantom/pkg/phantom"
