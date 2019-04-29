@@ -1,6 +1,7 @@
 package phantom
 
 import (
+	"errors"
 	"net"
 	"strconv"
 	"strings"
