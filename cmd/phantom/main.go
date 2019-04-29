@@ -34,7 +34,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/breakcrypto/phantom/pkg/storage"
+	"github.com/jackkdev/phantom/pkg/storage"
 	"log"
 	"github.com/breakcrypto/phantom/pkg/socket/wire"
 	"github.com/breakcrypto/phantom/pkg/phantom"
@@ -141,15 +141,6 @@ func main() {
 		}
 	}
 
-	db, err := storage.InitialiseDB("peers.db")
-	if err != nil {
-		log.Fatal("An error occurred initialising the database")
-	} else {
-		log.Println("Database was initialised:", db)
-	}
-
-	cachedPeers = storage.LoadPeersFromDB(db)
-
 	magicMsgNewLine = true
 
 	magicBytes64, _ := strconv.ParseUint(magicHex, 16, 32)
@@ -245,6 +236,15 @@ func main() {
 	fmt.Println("Sentinel Version: ", daemonVersion)
 	fmt.Println("\n\n")
 
+	db, err := storage.InitialiseDB("peers.db")
+	if err != nil {
+		log.Fatal("An error occurred initialising the database")
+	} else {
+		log.Println("Database was initialised:", db)
+	}
+
+	cachedPeers = storage.LoadPeersFromDB(db)
+
 	for ip := range peerSet {
 		//make the ping channel
 		pingChannel := make(chan phantom.MasternodePing, 1500)
@@ -308,6 +308,13 @@ func processNewHashes(hashChannel chan chainhash.Hash, queue *phantom.Queue) {
 }
 
 func processNewAddresses(addrChannel chan wire.NetAddress, peerSet map[string]wire.NetAddress) {
+
+	// Cache peers
+	db, err := storage.InitialiseDB("peers.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for {
 		addr := <-addrChannel
 
@@ -316,6 +323,8 @@ func processNewAddresses(addrChannel chan wire.NetAddress, peerSet map[string]wi
 		}
 
 		peerSet[addr.IP.String()] = addr
+
+		err = storage.CachePeerToDB(db, addr.IP.String())
 	}
 }
 
@@ -324,13 +333,6 @@ func getNextPeer(connectionSet map[string]*phantom.PingerConnection, peerSet map
 		if _, ok := connectionSet[peer]; !ok {
 			//we have a peer that isn't in the conncetion list return it
 			returnValue = peerSet[peer]
-
-			// Cache peers
-			db, err := storage.InitialiseDB("peers.db")
-			if err != nil {
-				log.Fatal(err)
-			}
-			err = storage.CachePeerToDB(db, peer)
 
 			//remove the peer from the connection list
 			delete(peerSet, peer)
