@@ -225,7 +225,7 @@ func main() {
 	fmt.Println("Default Port: ", defaultPort)
 	fmt.Println("Hash: ", bootstrapHash)
 	fmt.Println("Sentinel Version: ", sentinelVersion)
-	fmt.Println("Sentinel Version: ", daemonVersion)
+	fmt.Println("Daemon Version: ", daemonVersion)
 	fmt.Println("\n\n")
 
 	for _, ip := range peerSet {
