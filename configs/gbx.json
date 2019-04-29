@@ -1,1 +1,1 @@
-{"name":"GBX","magicbytes":"D4C3B21A","port":12455,"protocol_number":70209,"magic_message":"DarkCoin Signed Message:","magic_message_newline":true,"bootstrap_url":"https://explorer.gobyte.network","sentinel_version":"010001"}
+{"name":"GBX","magicbytes":"D4C3B21A","port":12455,"protocol_number":70209,"magic_message":"DarkCoin Signed Message:","magic_message_newline":true,"bootstrap_url":"https://explorer.gobyte.network","sentinel_version":"1.0.1"}
