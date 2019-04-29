@@ -1,6 +1,7 @@
 package phantom
 
 import (
+	"errors"
 	"net"
 	"strconv"
 	"strings"
@@ -19,19 +20,25 @@ func ConvertVersionStringToInt(str string) uint32 {
 	return uint32(version)
 }
 
-func SplitAddress(pair string) wire.NetAddress {
+func SplitAddress(pair string) (wire.NetAddress, error) {
 	ipPort := strings.Split(pair, ":")
+	if len(ipPort) != 2 {
+		return wire.NetAddress{}, errors.New("invalid ip:port pair")
+	}
 	ip := ipPort[0]
 	port, _ := strconv.Atoi(ipPort[1])
 	return wire.NetAddress{time.Now(),
 		0,
 		net.ParseIP(ip),
-		uint16(port)}
+		uint16(port)}, nil
 }
 
 func SplitAddressList(bootstraps string) (addresses []wire.NetAddress) {
 	for _, bootstrap := range strings.Split(bootstraps, ",") {
-		addresses = append(addresses, SplitAddress(bootstrap))
+		ip, err := SplitAddress(bootstrap)
+		if err == nil {
+			addresses = append(addresses, ip)
+		}
 	}
 	return addresses
 }

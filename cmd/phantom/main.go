@@ -85,8 +85,8 @@ func main() {
 	flag.StringVar(&bootstrapHashStr, "bootstrap_hash", "", "Hash to bootstrap the pings with ( top - 12 )")
 	flag.StringVar(&bootstrapExplorer, "bootstrap_url", "", "Explorer to bootstrap from.")
 
-	flag.StringVar(&sentinelString, "sentinel_version", "0.0.0", "The string to use for the sentinel version number (i.e. 1.20.0)")
-	flag.StringVar(&daemonString, "daemon_version", "0.0.0.0", "The string to use for the sentinel version number (i.e. 1.20.0)")
+	flag.StringVar(&sentinelString, "sentinel_version", "", "The string to use for the sentinel version number (i.e. 1.20.0)")
+	flag.StringVar(&daemonString, "daemon_version", "", "The string to use for the sentinel version number (i.e. 1.20.0)")
 
 	flag.StringVar(&userAgent, "user_agent", "@_breakcrypto phantom", "The user agent string to connect to remote peers with.")
 
@@ -225,10 +225,10 @@ func main() {
 	fmt.Println("Default Port: ", defaultPort)
 	fmt.Println("Hash: ", bootstrapHash)
 	fmt.Println("Sentinel Version: ", sentinelVersion)
-	fmt.Println("Sentinel Version: ", daemonVersion)
+	fmt.Println("Daemon Version: ", daemonVersion)
 	fmt.Println("\n\n")
 
-	for ip := range peerSet {
+	for _, ip := range peerSet {
 		//make the ping channel
 		pingChannel := make(chan phantom.MasternodePing, 1500)
 
@@ -236,8 +236,8 @@ func main() {
 
 		pinger := phantom.PingerConnection{
 			MagicBytes: magicBytes,
-			IpAddress: ip,
-			Port: uint16(defaultPort),
+			IpAddress: ip.IP.String(),
+			Port: uint16(ip.Port),
 			ProtocolNumber: protocolNumber,
 			SentinelVersion: sentinelVersion,
 			DaemonVersion: daemonVersion,
