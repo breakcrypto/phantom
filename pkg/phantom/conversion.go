@@ -34,7 +34,10 @@ func SplitAddress(pair string) (wire.NetAddress, error) {
 
 func SplitAddressList(bootstraps string) (addresses []wire.NetAddress) {
 	for _, bootstrap := range strings.Split(bootstraps, ",") {
-		addresses = append(addresses, SplitAddress(bootstrap))
+		ip, err := SplitAddress(bootstrap)
+		if err == nil {
+			addresses = append(addresses, ip)
+		}
 	}
 	return addresses
 }
