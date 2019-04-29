@@ -1,6 +1,6 @@
 package storage
 
-import(
+import (
 	"encoding/json"
 	"fmt"
 	"github.com/boltdb/bolt"
@@ -14,11 +14,11 @@ func InitialiseDB(path string) (*bolt.DB, error) {
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		peerBucket, err := tx.CreateBucketIfNotExists([]byte("peers"))
+		_, err := tx.CreateBucketIfNotExists([]byte("peers"))
 		if err != nil {
-			return fmt.Errorf("Could not create peers bucket: %v", err)
+			return fmt.Errorf("DB: Could not create peers bucket: %v", err)
 		} else {
-			log.Println("Bucket created:", peerBucket)
+			log.Println("DB: Bucket created was created")
 		}
 		return nil
 	})
@@ -27,7 +27,7 @@ func InitialiseDB(path string) (*bolt.DB, error) {
 		return nil, err
 	}
 
-	log.Println("Database successfully initialised...")
+	log.Println("DB: Successfully initialised...")
 
 	return db, nil
 }
