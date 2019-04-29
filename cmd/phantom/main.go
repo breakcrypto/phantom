@@ -85,8 +85,8 @@ func main() {
 	flag.StringVar(&bootstrapHashStr, "bootstrap_hash", "", "Hash to bootstrap the pings with ( top - 12 )")
 	flag.StringVar(&bootstrapExplorer, "bootstrap_url", "", "Explorer to bootstrap from.")
 
-	flag.StringVar(&sentinelString, "sentinel_version", "0.0.0", "The string to use for the sentinel version number (i.e. 1.20.0)")
-	flag.StringVar(&daemonString, "daemon_version", "0.0.0.0", "The string to use for the sentinel version number (i.e. 1.20.0)")
+	flag.StringVar(&sentinelString, "sentinel_version", "", "The string to use for the sentinel version number (i.e. 1.20.0)")
+	flag.StringVar(&daemonString, "daemon_version", "", "The string to use for the sentinel version number (i.e. 1.20.0)")
 
 	flag.StringVar(&userAgent, "user_agent", "@_breakcrypto phantom", "The user agent string to connect to remote peers with.")
 
