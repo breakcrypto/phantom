@@ -228,7 +228,7 @@ func main() {
 	fmt.Println("Sentinel Version: ", daemonVersion)
 	fmt.Println("\n\n")
 
-	for ip := range peerSet {
+	for _, ip := range peerSet {
 		//make the ping channel
 		pingChannel := make(chan phantom.MasternodePing, 1500)
 
@@ -236,8 +236,8 @@ func main() {
 
 		pinger := phantom.PingerConnection{
 			MagicBytes: magicBytes,
-			IpAddress: ip,
-			Port: uint16(defaultPort),
+			IpAddress: ip.IP.String(),
+			Port: uint16(ip.Port),
 			ProtocolNumber: protocolNumber,
 			SentinelVersion: sentinelVersion,
 			DaemonVersion: daemonVersion,
