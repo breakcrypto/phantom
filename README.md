@@ -11,7 +11,7 @@ The phantom daemon is custom built wallet designed to replicate only what is req
 * email: breakcrypto@gmail.com
 * twitter: https://twitter.com/_breakcrypto
 * discord: breakcrypto#0011
-* discord channel: https://discord.gg/RmUcbY
+* discord channel: https://discord.gg/fQPb2ew
 * bitcoin talk discussion: https://bitcointalk.org/index.php?topic=5136453.0
 
 ## Donation Addresses
