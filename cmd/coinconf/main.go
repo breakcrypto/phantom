@@ -216,5 +216,5 @@ func ConvertVersionHexToString(str string) string {
 	for i := 0; i<len(str); i += 2 {
 		result += str[i:i+2]
 	}
-	return str
+	return result
 }
