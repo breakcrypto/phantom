@@ -1,72 +1,84 @@
 package storage
 
-import (
-	"encoding/json"
+import(
 	"fmt"
-	"github.com/boltdb/bolt"
 	"log"
+	"github.com/boltdb/bolt"
+	"github.com/satori/go.uuid"
+	//"github.com/breakcrypto/phantom/pkg/socket/wire"
 )
 
-func InitialiseDB(path string) (*bolt.DB, error) {
-	db, err := bolt.Open(path, 0600, nil)
+// set up the database file
+func SetupDB() (*bolt.DB, error) {
+	db, err := bolt.Open("nodes.db", 0600, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not open db, %v", err)
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("peers"))
+		root, err := tx.CreateBucketIfNotExists([]byte("peers"))
 		if err != nil {
-			return fmt.Errorf("DB: Could not create peers bucket: %v", err)
-		} else {
-			log.Println("DB: Bucket created was created")
+			return fmt.Errorf("could not create root bucket: %v", err)
 		}
+
+		_, err = root.CreateBucketIfNotExists([]byte("nodes"))
+		if err != nil {
+			return fmt.Errorf("could not create peers bucket: %v", err)
+		}
+
 		return nil
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not set up buckets, %v", err)
 	}
 
-	log.Println("DB: Successfully initialised...")
-
+	log.Println("Database setup complete...")
 	return db, nil
 }
 
-func CachePeerToDB(db *bolt.DB, peer string) error {
-	entry := peer
-	entryBytes, err := json.Marshal(entry)
+// add a peer (in string format) to the database
+func AddPeer(db *bolt.DB, peer string) error {
 
-	if err != nil {
-		return err
-	}
+	// generate a uuid for the key
+	id := uuid.Must(uuid.NewV4()).String()
 
-	err = db.Update(func(tx *bolt.Tx) error {
-		err := tx.Bucket([]byte("peers")).Put([]byte("peer"), (entryBytes))
+	err := db.Update(func(tx *bolt.Tx) error {
+		err := tx.Bucket([]byte("peers")).Bucket([]byte("nodes")).Put([]byte(id), []byte(peer))
 		if err != nil {
-			return err
+			return fmt.Errorf("could not insert peer: %v", err)
 		}
 
 		return nil
 	})
 
-	log.Println("Peer added to cache", entry)
-	defer db.Close()
-
+	fmt.Println("Added peer to database:", peer)
 	return err
 }
 
-func LoadPeersFromDB(db *bolt.DB) error {
+// retrieve all stored peers
+func FetchPeers(db *bolt.DB) ([]string, error) {
+
+	var list []string
+
 	err := db.View(func(tx *bolt.Tx) error {
-		peers := tx.Bucket([]byte("peers")).Get([]byte("peer"))
-		log.Println("Peers:\n", string(peers))
+		b := tx.Bucket([]byte("peers")).Bucket([]byte("nodes"))
+		b.ForEach(func(k, v []byte) error {
+			fmt.Println("Loaded from database:", string(k), string(v))
+
+			// load into array
+			list = append(list, string(v))
+
+			return nil
+		})
+		fmt.Println(list)
+
 		return nil
 	})
 
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
-	defer db.Close()
-
-	return nil
+	return list, nil
 }

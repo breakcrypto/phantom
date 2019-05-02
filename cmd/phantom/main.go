@@ -56,10 +56,7 @@ var sentinelVersion uint32
 var daemonVersion uint32
 var masternodeConf string
 var coinCon phantom.CoinConf
-var dbPath string
 var userAgent string
-
-var cachedPeers error
 
 const VERSION = "0.0.4"
 
@@ -93,8 +90,6 @@ func main() {
 	flag.StringVar(&daemonString, "daemon_version", "0.0.0.0", "The string to use for the sentinel version number (i.e. 1.20.0)")
 
 	flag.StringVar(&userAgent, "user_agent", "@_breakcrypto phantom", "The user agent string to connect to remote peers with.")
-
-	flag.StringVar(&dbPath, "db_path", "./peers.db", "The destination for database storage.")
 
 	flag.Parse()
 
@@ -134,9 +129,6 @@ func main() {
 			}
 			if userAgent == "@_breakcrypto phantom" && coinInfo.UserAgent != "" {
 				userAgent = coinInfo.UserAgent
-			}
-			if dbPath == "" {
-				dbPath = "peers.db"
 			}
 		}
 	}
@@ -236,15 +228,6 @@ func main() {
 	fmt.Println("Sentinel Version: ", daemonVersion)
 	fmt.Println("\n\n")
 
-	db, err := storage.InitialiseDB("peers.db")
-	if err != nil {
-		log.Fatal("An error occurred initialising the database")
-	} else {
-		log.Println("Database was initialised:", db)
-	}
-
-	cachedPeers = storage.LoadPeersFromDB(db)
-
 	for ip := range peerSet {
 		//make the ping channel
 		pingChannel := make(chan phantom.MasternodePing, 1500)
@@ -309,10 +292,11 @@ func processNewHashes(hashChannel chan chainhash.Hash, queue *phantom.Queue) {
 
 func processNewAddresses(addrChannel chan wire.NetAddress, peerSet map[string]wire.NetAddress) {
 
-	// Cache peers
-	db, err := storage.InitialiseDB("peers.db")
+	// init database
+	db, err := storage.SetupDB()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("an error occurred:", err)
+		return
 	}
 
 	for {
@@ -324,11 +308,27 @@ func processNewAddresses(addrChannel chan wire.NetAddress, peerSet map[string]wi
 
 		peerSet[addr.IP.String()] = addr
 
-		err = storage.CachePeerToDB(db, addr.IP.String())
+		err = storage.AddPeer(db, addr.IP.String())
 	}
+
+	// close db connection
+	defer db.Close()
+
 }
 
 func getNextPeer(connectionSet map[string]*phantom.PingerConnection, peerSet map[string]wire.NetAddress) (returnValue wire.NetAddress, err error) {
+
+	// load the database
+	db, err := storage.SetupDB()
+	if err != nil {
+		log.Fatal("an error occurred:", err)
+		return
+	}
+
+	// fetch my peers
+	list, err := storage.FetchPeers(db)
+	fmt.Println(list)
+
 	for peer := range peerSet {
 		if _, ok := connectionSet[peer]; !ok {
 			//we have a peer that isn't in the conncetion list return it
