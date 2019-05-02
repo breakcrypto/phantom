@@ -316,7 +316,7 @@ func processNewAddresses(addrChannel chan wire.NetAddress, peerSet map[string]wi
 
 }
 
-func getNextPeer(connectionSet map[string]*phantom.PingerConnection, peerSet map[string]wire.NetAddress) (returnValue wire.NetAddress, err error) {
+func getNextPeer(peerSet map[string]wire.NetAddress) (returnValue wire.NetAddress, err error) {
 
 	// load the database
 	db, err := storage.SetupDB()
@@ -329,19 +329,25 @@ func getNextPeer(connectionSet map[string]*phantom.PingerConnection, peerSet map
 	list, err := storage.FetchPeers(db)
 	fmt.Println(list)
 
-	for peer := range peerSet {
-		if _, ok := connectionSet[peer]; !ok {
-			//we have a peer that isn't in the conncetion list return it
-			returnValue = peerSet[peer]
-
-			//remove the peer from the connection list
-			delete(peerSet, peer)
-
-			log.Println("Found new peer: ", peer)
-
-			return returnValue, nil
-		}
+	for i := 0; i <= len(list); i++ {
+		returnValue = peerSet[list[i]]
 	}
+
+	// LEFT FOR NOW UNTIL FURTHER TESTING IS COMPLETE
+	//for peer := range peerSet {
+	//	if _, ok := connectionSet[peer]; !ok {
+	//		//we have a peer that isn't in the conncetion list return it
+	//		returnValue = peerSet[peer]
+	//
+	//		//remove the peer from the connection list
+	//		delete(peerSet, peer)
+	//
+	//		log.Println("Found new peer: ", peer)
+	//
+	//		return returnValue, nil
+	//	}
+	//}
+
 	return returnValue, errors.New("No peers found.")
 }
 
@@ -402,7 +408,7 @@ func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[s
 			for i := 0; i < int(maxConnections) - len(connectionSet); i++ {
 
 				//spawn off a new connection
-				peer, err := getNextPeer(connectionSet, peerSet)
+				peer, err := getNextPeer(peerSet)
 
 				if err != nil {
 					log.Println("No new peers found.")
