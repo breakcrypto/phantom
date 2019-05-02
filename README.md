@@ -153,6 +153,8 @@ There is a coinconf generator included that can auto-generate settings for most 
     	The string to use for the sentinel version number (i.e. 1.20.0) (default "0.0.0")
   -user_agent
       The user agent string to connect to remote peers with.
+  -db_path
+      The destination for database storage (default path is ./peers.db)
 ```
 
 ## Building (using Docker)
