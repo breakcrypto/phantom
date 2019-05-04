@@ -228,8 +228,8 @@ func (pinger *PingerConnection) Start(userAgent string) {
 						if message.Command() == "mnp" {
 							ping := message.(*wire.MsgMNP)
 							pingTime := time.Unix(int64(ping.SigTime), 0)
-							//if the ping is more than a minute old, delete it
-							if pingTime.Add(time.Minute * 1).Before(time.Now().UTC()) {
+							//if the ping is more than 5 minutes old, delete it
+							if pingTime.Add(time.Minute * 5).Before(time.Now().UTC()) {
 								delete(messageMap, hash)
 							}
 						}
@@ -237,8 +237,8 @@ func (pinger *PingerConnection) Start(userAgent string) {
 						if message.Command() == "mnb" {
 							mnb := message.(*wire.MsgMNB)
 							pingTime := time.Unix(int64(mnb.LastPing.SigTime), 0)
-							//if the ping is more than a minute old, delete it
-							if pingTime.Add(time.Minute * 1).Before(time.Now().UTC()) {
+							//if the ping is more than 5 minutes old, delete it
+							if pingTime.Add(time.Minute * 5).Before(time.Now().UTC()) {
 								delete(messageMap, hash)
 							}
 						}

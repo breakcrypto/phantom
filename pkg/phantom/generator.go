@@ -152,12 +152,12 @@ func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan Masternod
 			if ok {
 				ping.BroadcastTemplate = &broadcast
 
-				//remove the broadcast after 4 hours
-				//sigTime := time.Unix(int64(broadcast.SigTime), 0)
-				//if sigTime.Add(time.Hour * 4).Before(time.Now().UTC()) {
-				//	delete(broadcastSet, ping.OutpointHash +
-				//		":" + strconv.Itoa(int(ping.OutpointIndex)))
-				//}
+				//remove the broadcast after 24 hours
+				sigTime := time.Unix(int64(broadcast.SigTime), 0)
+				if sigTime.Add(time.Hour * 24).Before(time.Now().UTC()) {
+					delete(broadcastSet, ping.OutpointHash +
+						":" + strconv.Itoa(int(ping.OutpointIndex)))
+				}
 			}
 		}
 

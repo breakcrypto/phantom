@@ -49,10 +49,10 @@ That's it. You do not need to restart your masternodes, you don't need to change
 
 # Downloads
 
-* [Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.4/phantom-windows-amd64.zip)
-* [Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.4/phantom-linux-amd64.zip)
-* [OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.4/phantom-darwin-amd64.zip)
-* [ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.4/phantom-linux-arm.zip)
+* [Windows](https://github.com/breakcrypto/phantom/releases/download/v0.0.5/phantom-windows-amd64.zip)
+* [Linux](https://github.com/breakcrypto/phantom/releases/download/v0.0.5/phantom-linux-amd64.zip)
+* [OSX](https://github.com/breakcrypto/phantom/releases/download/v0.0.5/phantom-darwin-amd64.zip)
+* [ARM](https://github.com/breakcrypto/phantom/releases/download/v0.0.5/phantom-linux-arm.zip)
 
 # Setup 
 
@@ -86,39 +86,13 @@ comments removed, epoch timestamp added to the end.
 ./phantom -magicbytes="E4D2411C" -port=1929 -protocol_number=70209 -magic_message="ProtonCoin Signed Message:" -bootstrap_ips="51.15.236.48:1929" -bootstrap_url="http://explorer.anodoscrypto.com:3001" -max_connections=10
 ```
 
-## Coin configurations exist for
+## PIVX based coins
 
-* $PAC
-* ANDS
-* BEET 
-* BITG 
-* CDM 
-* DEV
-* DKPC
-* FEIRM
-* GBX
-* GIC
-* HLM
-* LPC
-* MARC
-* MILL
-* OMEGA
-* PIVX
-* POLIS
-* PRX
-* RAPID
-* SINS
-* SLX
-* SMART
-* SPARKS
-* SYS
-* TELOS
-* WGR
-* WOLF
-* XAP
-* XBI
-* XLQ
-* XZC
+If you are launching a new node, not performing a hotswap, due to the way PIVX coins relay information, a special start-up flag is required ```-broadcast_listen```. You must start the phantom daemon, let it gather up a few peers, and then press start from your wallet.
+
+## Coin configurations
+
+Check the /config folder
 
 There is a coinconf generator included that can auto-generate settings for most masternode coins. Check the `tools/coinconf` directory.
 
@@ -128,21 +102,23 @@ There is a coinconf generator included that can auto-generate settings for most 
   -bootstrap_hash string
     	Hash to bootstrap the pings with ( top - 12 )
   -bootstrap_ips string
-    	IP address to bootstrap the network
+    	IP addresses to bootstrap the network (i.e. "1.1.1.1:1234,2.2.2.2:1234")
   -bootstrap_url string
     	Explorer to bootstrap from.
-  -coin_conf
-      Name of the file to load the coin information from.
+  -broadcast_listen
+    	If set to true, the phantom will listen for new broadcasts and cache them for 4 hours.
+  -coin_conf string
+    	Name of the file to load the coin information from.
   -daemon_version string
-    	The string to use for the sentinel version number (i.e. 1.20.0) (default "0.0.0.0")
+    	The string to use for the sentinel version number (i.e. 1.20.0)
   -magic_message string
     	the signing message
   -magic_message_newline
     	add a new line to the magic message (default true)
   -magicbytes string
     	a hex string for the magic bytes
-  -masternode_conf
-      Name of the file to load the masternode information from.
+  -masternode_conf string
+    	Name of the file to load the masternode information from. (default "masternode.txt")
   -max_connections uint
     	the number of peers to maintain (default 10)
   -port uint
@@ -150,9 +126,9 @@ There is a coinconf generator included that can auto-generate settings for most 
   -protocol_number uint
     	the protocol number to connect and ping with
   -sentinel_version string
-    	The string to use for the sentinel version number (i.e. 1.20.0) (default "0.0.0")
-  -user_agent
-      The user agent string to connect to remote peers with.
+    	The string to use for the sentinel version number (i.e. 1.20.0)
+  -user_agent string
+    	The user agent string to connect to remote peers with. (default "@_breakcrypto phantom")
 ```
 
 ## Building (using Docker)
