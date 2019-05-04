@@ -57,7 +57,7 @@ var masternodeConf string
 var coinCon phantom.CoinConf
 var userAgent string
 
-const VERSION = "0.0.4.1"
+const VERSION = "0.0.5"
 
 func main() {
 
