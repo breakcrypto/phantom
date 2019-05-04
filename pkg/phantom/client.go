@@ -35,7 +35,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"log"
 	"net"
-	"github.com/breakcrypto/phantom/pkg/socket/wire"
+	"phantom/pkg/socket/wire"
 	"strconv"
 	"strings"
 	"sync"
@@ -53,6 +53,7 @@ type PingerConnection struct {
 	PingChannel chan MasternodePing
 	AddrChannel chan wire.NetAddress
 	HashChannel chan chainhash.Hash
+	BroadcastChannel chan wire.MsgMNB
 	Status int8
 	WaitGroup *sync.WaitGroup
 	Mutex sync.Mutex
@@ -67,7 +68,7 @@ func (pinger *PingerConnection) Start(userAgent string) {
 
 	var connectionAttempts uint8 = 0
 
-	var pingMap map[string]wire.MsgMNP
+	var messageMap map[string]wire.Message
 
 	var magic = wire.BitcoinNet(pinger.MagicBytes)
 
@@ -105,7 +106,7 @@ func (pinger *PingerConnection) Start(userAgent string) {
 	}
 
 	//setup the ping inv map
-	pingMap = make(map[string]wire.MsgMNP)
+	messageMap = make(map[string]wire.Message)
 
 	for {
 
@@ -145,12 +146,15 @@ func (pinger *PingerConnection) Start(userAgent string) {
 
 			if (err != nil) {
 				if strings.Contains(err.Error(), "unhandled command") {
+					//log.Println(err)
 					continue
 				}
 				log.Printf("%s : %s\n", pinger.IpAddress, err)
 				connectionAttempts++
 				continue
 			} else {
+
+				//log.Println("COMMAND: ", msg.Command())
 
 				connectionAttempts = 0
 
@@ -160,6 +164,16 @@ func (pinger *PingerConnection) Start(userAgent string) {
 						if inventory.Type.String() == "MSG_BLOCK" {
 							log.Println("New block received: \n" + inventory.Hash.String())
 							pinger.HashChannel <- inventory.Hash
+						}
+
+						if inventory.Type.String() == "Unknown InvType (14)" {
+							//MNANNOUNCE RECEIVED FOR OUR NODE
+							getdata := wire.MsgGetData{}
+							getdata.AddInvVect(inventory)
+
+							var buf bytes.Buffer
+							wire.WriteMessageN(&buf, &getdata, pinger.ProtocolNumber, magic)
+							conn.Write(buf.Bytes())
 						}
 					}
 				}
@@ -209,12 +223,24 @@ func (pinger *PingerConnection) Start(userAgent string) {
 
 					log.Printf("%s : PONG!\n", pinger.IpAddress)
 
-					//clear out the ping map
-					for hash, ping := range pingMap {
-						pingTime := time.Unix(int64(ping.SigTime), 0)
-						//if the ping is more than a minute old, delete it
-						if pingTime.Add(time.Minute * 1).Before(time.Now().UTC()) {
-							delete(pingMap, hash)
+					//clear out the message map
+					for hash, message := range messageMap {
+						if message.Command() == "mnp" {
+							ping := message.(*wire.MsgMNP)
+							pingTime := time.Unix(int64(ping.SigTime), 0)
+							//if the ping is more than a minute old, delete it
+							if pingTime.Add(time.Minute * 1).Before(time.Now().UTC()) {
+								delete(messageMap, hash)
+							}
+						}
+
+						if message.Command() == "mnb" {
+							mnb := message.(*wire.MsgMNB)
+							pingTime := time.Unix(int64(mnb.LastPing.SigTime), 0)
+							//if the ping is more than a minute old, delete it
+							if pingTime.Add(time.Minute * 1).Before(time.Now().UTC()) {
+								delete(messageMap, hash)
+							}
 						}
 					}
 				}
@@ -227,6 +253,15 @@ func (pinger *PingerConnection) Start(userAgent string) {
 					}
 				}
 
+				//let broadcast channels relay back broadcasts
+				if (msg.Command() == "mnb") {
+					mnb := msg.(*wire.MsgMNB)
+					if pinger.BroadcastChannel != nil {
+						log.Println("Masternode broadcast detected for: ", mnb.Vin.PreviousOutPoint.String())
+						pinger.BroadcastChannel <- *mnb
+					}
+				}
+
 				//non-blocking select
 				select {
 					case ping := <-pinger.PingChannel:
@@ -235,6 +270,30 @@ func (pinger *PingerConnection) Start(userAgent string) {
 
 						mnp := ping.GenerateMasternodePing(pinger.SentinelVersion, pinger.DaemonVersion)
 
+						//check to see if this is a broadcast relay
+						if ping.BroadcastTemplate != nil {
+							//USING BROADCAST TEMPLATE
+
+							mnb := *ping.BroadcastTemplate
+							mnb.LastPing = mnp
+
+							inv := wire.MsgInv{}
+							invVec := wire.InvVect{}
+							invVec.Type = 14
+							invVec.Hash = mnb.GetHash()
+							inv.AddInvVect(&invVec)
+
+							var buf bytes.Buffer
+							wire.WriteMessageN(&buf, &inv, pinger.ProtocolNumber, magic)
+
+							byteData := buf.Bytes()
+
+							conn.Write(byteData)
+
+							messageMap[invVec.Hash.String()] = &mnb
+						}
+
+						//ALWAYS SEND THE PINGS
 						//serialize to a []byte
 						w := new(bytes.Buffer)
 						mnp.Serialize(w)
@@ -252,7 +311,7 @@ func (pinger *PingerConnection) Start(userAgent string) {
 						conn.Write(buf.Bytes())
 
 						//store the ping
-						pingMap[invVec.Hash.String()] = mnp
+						messageMap[invVec.Hash.String()] = &mnp
 
 					default:
 						//fmt.Println("no message received")
@@ -266,10 +325,10 @@ func (pinger *PingerConnection) Start(userAgent string) {
 					for _, inv := range getData.InvList {
 						//check the map
 						str := inv.Hash.String()
-						if val, ok := pingMap[str]; ok {
+						if val, ok := messageMap[str]; ok {
 							//do something here
 							var buf bytes.Buffer
-							wire.WriteMessageN(&buf, &val, pinger.ProtocolNumber, magic)
+							wire.WriteMessageN(&buf, val, pinger.ProtocolNumber, magic)
 							conn.Write(buf.Bytes())
 						}
 					}

@@ -57,7 +57,7 @@ var masternodeConf string
 var coinCon phantom.CoinConf
 var userAgent string
 
-const VERSION = "0.0.4"
+const VERSION = "0.0.4.1"
 
 func main() {
 
@@ -71,6 +71,7 @@ func main() {
 	var sentinelString string
 	var daemonString string
 	var coinConfString string
+	var broadcastListen bool
 
 	flag.StringVar(&coinConfString, "coin_conf", "", "Name of the file to load the coin information from.")
 	flag.StringVar(&masternodeConf, "masternode_conf", "masternode.txt", "Name of the file to load the masternode information from.")
@@ -89,6 +90,8 @@ func main() {
 	flag.StringVar(&daemonString, "daemon_version", "", "The string to use for the sentinel version number (i.e. 1.20.0)")
 
 	flag.StringVar(&userAgent, "user_agent", "@_breakcrypto phantom", "The user agent string to connect to remote peers with.")
+
+	flag.BoolVar(&broadcastListen, "broadcast_listen", false, "If set to true, the phantom will listen for new broadcasts and cache them for 4 hours.")
 
 
 	flag.Parse()
@@ -156,6 +159,7 @@ func main() {
 
 	var connectionSet = make(map[string]*phantom.PingerConnection)
 	var peerSet = make(map[string]wire.NetAddress)
+	var broadcastSet = make(map[string]wire.MsgMNB)
 
 	var waitGroup sync.WaitGroup
 
@@ -173,6 +177,11 @@ func main() {
 
 	addrProcessingChannel := make(chan wire.NetAddress, 1500)
 	hashProcessingChannel := make(chan chainhash.Hash, 1500)
+
+	var broadcastProcessingChannel chan wire.MsgMNB
+	if broadcastListen {
+		broadcastProcessingChannel = make(chan wire.MsgMNB, 1500)
+	}
 
 	hashQueue := phantom.NewQueue(12)
 
@@ -226,6 +235,7 @@ func main() {
 	fmt.Println("Hash: ", bootstrapHash)
 	fmt.Println("Sentinel Version: ", sentinelVersion)
 	fmt.Println("Daemon Version: ", daemonVersion)
+	fmt.Println("Listen for broadcasts: ", broadcastListen)
 	fmt.Println("\n\n")
 
 	for _, ip := range peerSet {
@@ -249,6 +259,11 @@ func main() {
 			WaitGroup: &waitGroup,
 		}
 
+		//not ideal
+		if broadcastListen {
+			pinger.BroadcastChannel = broadcastProcessingChannel
+		}
+
 		//make a client
 		connectionSet[pinger.IpAddress] = &pinger
 
@@ -259,19 +274,32 @@ func main() {
 
 	waitGroup.Add(1)
 
-	go sendPings(connectionSet, peerSet, pingGeneratorChannel, addrProcessingChannel, hashProcessingChannel, waitGroup)
-	go generatePings(pingGeneratorChannel, hashQueue, magicMessage)
+	if broadcastListen {
+		go processNewBroadcasts(broadcastProcessingChannel, broadcastSet)
+	}
+
 	go processNewAddresses(addrProcessingChannel, peerSet)
 	go processNewHashes(hashProcessingChannel, hashQueue)
+	go sendPings(connectionSet, peerSet, pingGeneratorChannel, addrProcessingChannel, hashProcessingChannel, broadcastProcessingChannel, waitGroup)
+	go generatePings(pingGeneratorChannel, hashQueue, magicMessage, broadcastSet)
 
 	waitGroup.Wait()
 }
 
-func generatePings(pingChannel chan phantom.MasternodePing, queue *phantom.Queue, magicMessage string) {
+func generatePings(pingChannel chan phantom.MasternodePing, queue *phantom.Queue,
+	magicMessage string, broadcastSet map[string]wire.MsgMNB) {
+
 	for {
 
-		fmt.Println("Loading settings.")
-		phantom.GeneratePingsFromMasternodeFile(masternodeConf, pingChannel, queue, magicMessage, sentinelVersion, daemonVersion)
+		phantom.GeneratePingsFromMasternodeFile(
+			masternodeConf,
+			pingChannel,
+			queue,
+			magicMessage,
+			sentinelVersion,
+			daemonVersion,
+			broadcastSet,
+			)
 		time.Sleep(time.Minute * 10)
 	}
 }
@@ -287,6 +315,16 @@ func processNewHashes(hashChannel chan chainhash.Hash, queue *phantom.Queue) {
 			queue.Pop()
 			//log.Println("Removing hash from queue: ", popped.String(), "(", queue.count, ")")
 		}
+	}
+}
+
+func processNewBroadcasts(broadcastChannel chan wire.MsgMNB, broadcastSet map[string]wire.MsgMNB) {
+	for {
+
+		mnb := <-broadcastChannel
+
+		broadcastSet[mnb.Vin.PreviousOutPoint.Hash.String() +
+			":" + strconv.Itoa(int(mnb.Vin.PreviousOutPoint.Index))] = mnb
 	}
 }
 
@@ -319,7 +357,7 @@ func getNextPeer(connectionSet map[string]*phantom.PingerConnection, peerSet map
 	return returnValue, errors.New("No peers found.")
 }
 
-func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[string]wire.NetAddress, pingChannel chan phantom.MasternodePing, addrChannel chan  wire.NetAddress, hashChannel chan chainhash.Hash, waitGroup sync.WaitGroup) {
+func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[string]wire.NetAddress, pingChannel chan phantom.MasternodePing, addrChannel chan  wire.NetAddress, hashChannel chan chainhash.Hash, broadcastChannel chan wire.MsgMNB, waitGroup sync.WaitGroup) {
 
 	time.Sleep(10 * time.Second) //hack to work around .Wait() race condition on fast start-ups
 
@@ -332,7 +370,7 @@ func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[s
 		log.Println(ping.Name, ping.PingTime.UTC())
 
 		if sleepTime > 0 {
-			fmt.Println("Sleeping for ", sleepTime.String())
+			log.Println("Sleeping for ", sleepTime.String())
 			time.Sleep(sleepTime)
 		}
 
@@ -366,7 +404,7 @@ func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[s
 		//replace the pointer
 		connectionSet = newConnectionSet
 
-		fmt.Println("Current number of connections to network: (", len(connectionSet), " / ", maxConnections, ")")
+		log.Println("Current number of connections to network: (", len(connectionSet), " / ", maxConnections, ")")
 
 		//spawn off extra nodes here if we don't have enough
 		if len(connectionSet) <  int(maxConnections) {
@@ -400,6 +438,11 @@ func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[s
 					Status:          0,
 					WaitGroup:       &waitGroup,
 				}
+
+				if broadcastChannel != nil {
+					newPinger.BroadcastChannel = broadcastChannel
+				}
+
 
 				//make a client
 				newConnectionSet[newPinger.IpAddress] = &newPinger
