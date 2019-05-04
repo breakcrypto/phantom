@@ -5,12 +5,25 @@
 package wire
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/binary"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"io"
 )
 
 type CService struct {
 	IpAddress [16]byte
 	Port uint16
+}
+
+func (service *CService) BtcEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
+	err := writeElement(w, &service.IpAddress)
+	if err != nil {
+		return err
+	}
+
+	return binary.Write(w, bigEndian, service.Port)
 }
 
 func (service *CService) BtcDecode(r io.Reader, pver uint32, enc MessageEncoding) error {
@@ -43,6 +56,7 @@ type MsgMNB struct {
 	SigTime uint64
 	ProtocolVersion uint32
 	LastPing MsgMNP
+	LastDsq uint64
 }
 
 // BtcDecode decodes r using the bitcoin protocol encoding into the receiver.
@@ -90,13 +104,29 @@ func (msg *MsgMNB) BtcDecode(r io.Reader, pver uint32, enc MessageEncoding) erro
 	//decode the ping
 	msg.LastPing.BtcDecode(r, pver, enc)
 
+	msg.LastDsq, err = binarySerializer.Uint64(r, littleEndian)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
 // BtcEncode encodes the receiver to w using the bitcoin protocol encoding.
 // This is part of the Message interface implementation.
 func (msg *MsgMNB) BtcEncode(w io.Writer, pver uint32, enc MessageEncoding) error {
-	return writeElement(w, msg.Vin)
+
+	writeTxIn(w, pver, 0, &msg.Vin)
+	msg.Addr.BtcEncode(w, pver, enc)
+	WriteVarBytes(w, pver, msg.PubKeyCollateralAddress[:])
+	WriteVarBytes(w, pver, msg.PubKeyMasternode[:])
+	WriteVarBytes(w, pver, msg.Sig[:])
+	writeElement(w, msg.SigTime)
+	writeElement(w, msg.ProtocolVersion)
+	msg.LastPing.BtcEncode(w, pver, enc)
+	writeElement(w, msg.LastDsq)
+
+	return nil
 }
 
 // Command returns the protocol command string for the message.  This is part
@@ -118,4 +148,26 @@ func (msg *MsgMNB) MaxPayloadLength(pver uint32) uint32 {
 // interface.  See MsgPong for details.
 func NewMsgMNB() *MsgMNB {
 	return &MsgMNB{}
+}
+
+func (msg *MsgMNB) Serialize(w io.Writer) error {
+	// At the current time, there is no difference between the wire encoding
+	// at protocol version 0 and the stable long-term storage format.  As
+	// a result, make use of BtcEncode.
+	//
+	// Passing a encoding type of WitnessEncoding to BtcEncode for MsgTx
+	// indicates that the transaction's witnesses (if any) should be
+	// serialized according to the new serialization structure defined in
+	// BIP0144.
+	return msg.BtcEncode(w, 0, 0)
+}
+
+func (msg *MsgMNB) GetHash() chainhash.Hash {
+	var b bytes.Buffer
+	w := bufio.NewWriter(&b)
+
+	writeElement(w, msg.SigTime)
+	WriteVarBytes(w, 0, msg.PubKeyCollateralAddress[:])
+
+	return chainhash.DoubleHashH(b.Bytes())
 }

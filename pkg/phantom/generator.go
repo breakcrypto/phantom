@@ -39,7 +39,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"log"
 	"os"
-	"github.com/breakcrypto/phantom/pkg/socket/wire"
+	"phantom/pkg/socket/wire"
 	"sort"
 	"strconv"
 	"strings"
@@ -56,6 +56,7 @@ type MasternodePing struct {
 	SentinelVersion uint32
 	DaemonVersion uint32
 	HashQueue *Queue
+	BroadcastTemplate *wire.MsgMNB
 }
 
 type pingSlice []MasternodePing
@@ -90,7 +91,7 @@ func determinePingTime(unixTime string) (time.Time) {
 }
 
 func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan MasternodePing, queue *Queue,
-	magicMessage string, sentinelVersion uint32, daemonVersion uint32) {
+	magicMessage string, sentinelVersion uint32, daemonVersion uint32, broadcastSet map[string]wire.MsgMNB) {
 
 	currentTime := time.Now().UTC()
 
@@ -130,7 +131,37 @@ func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan Masternod
 			log.Println("Error reading masternode index value.")
 		}
 
-		pings = append(pings, MasternodePing{fields[0], fields[3], uint32(outputIndex), fields[2], determinePingTime(fields[5]), magicMessage, sentinelVersion, daemonVersion, queue})
+		ping := MasternodePing{fields[0],
+			fields[3],
+			uint32(outputIndex),
+			fields[2],
+			determinePingTime(fields[5]),
+			magicMessage,
+			sentinelVersion,
+			daemonVersion,
+			queue,
+			nil,
+		}
+
+		if broadcastSet != nil {
+			//check for a broadcast template
+			broadcast, ok := broadcastSet[ping.OutpointHash +
+				":" + strconv.Itoa(int(ping.OutpointIndex))]
+
+			//provide the template
+			if ok {
+				ping.BroadcastTemplate = &broadcast
+
+				//remove the broadcast after 4 hours
+				//sigTime := time.Unix(int64(broadcast.SigTime), 0)
+				//if sigTime.Add(time.Hour * 4).Before(time.Now().UTC()) {
+				//	delete(broadcastSet, ping.OutpointHash +
+				//		":" + strconv.Itoa(int(ping.OutpointIndex)))
+				//}
+			}
+		}
+
+		pings = append(pings, ping)
 	}
 
 	//sort the pings by time
@@ -171,7 +202,8 @@ func (ping *MasternodePing) GenerateMasternodePing(sentinelVersion uint32, daemo
 	mnp.Vin = *txIn
 
 	//setup the time
-	mnp.SigTime = uint64(ping.PingTime.Add(time.Second * 3).UTC().Unix()) //generate a deterministic time
+	//mnp.SigTime = uint64(ping.PingTime.Add(time.Second * 3).UTC().Unix()) //generate a deterministic time
+	mnp.SigTime = uint64(ping.PingTime.Add(time.Minute * 12).UTC().Unix())
 
 	//sign the ping
 	wif, err := btcutil.DecodeWIF(ping.PrivateKey)
