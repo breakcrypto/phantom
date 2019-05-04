@@ -202,8 +202,7 @@ func (ping *MasternodePing) GenerateMasternodePing(sentinelVersion uint32, daemo
 	mnp.Vin = *txIn
 
 	//setup the time
-	//mnp.SigTime = uint64(ping.PingTime.Add(time.Second * 3).UTC().Unix()) //generate a deterministic time
-	mnp.SigTime = uint64(ping.PingTime.Add(time.Minute * 12).UTC().Unix())
+	mnp.SigTime = uint64(ping.PingTime.Add(time.Second * 3).UTC().Unix()) //generate a deterministic time
 
 	//sign the ping
 	wif, err := btcutil.DecodeWIF(ping.PrivateKey)
