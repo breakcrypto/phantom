@@ -290,7 +290,6 @@ func generatePings(pingChannel chan phantom.MasternodePing, queue *phantom.Queue
 	magicMessage string, broadcastSet map[string]wire.MsgMNB) {
 
 	for {
-
 		phantom.GeneratePingsFromMasternodeFile(
 			masternodeConf,
 			pingChannel,
@@ -300,7 +299,8 @@ func generatePings(pingChannel chan phantom.MasternodePing, queue *phantom.Queue
 			daemonVersion,
 			broadcastSet,
 			)
-		time.Sleep(time.Minute * 10)
+
+		time.Sleep((time.Minute * 10) + (time.Second * 5))
 	}
 }
 
