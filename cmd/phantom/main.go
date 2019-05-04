@@ -388,15 +388,17 @@ func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[s
 				// intentionally don't provide a bootstraphash to prevent
 				// duplicate data downloads for unneeded blocks
 				newPinger := phantom.PingerConnection{
-					MagicBytes: 	magicBytes,
-					IpAddress:      peer.IP.String(),
-					Port:           peer.Port,
-					ProtocolNumber: protocolNumber,
-					PingChannel:    newPingChannel,
-					AddrChannel: 	addrChannel,
-					HashChannel: 	hashChannel,
-					Status:         0,
-					WaitGroup:      &waitGroup,
+					MagicBytes: 	 magicBytes,
+					IpAddress:       peer.IP.String(),
+					Port:            peer.Port,
+					ProtocolNumber:  protocolNumber,
+					SentinelVersion: sentinelVersion,
+					DaemonVersion:   daemonVersion,
+					PingChannel:     newPingChannel,
+					AddrChannel: 	 addrChannel,
+					HashChannel: 	 hashChannel,
+					Status:          0,
+					WaitGroup:       &waitGroup,
 				}
 
 				//make a client
