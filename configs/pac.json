@@ -1,0 +1,10 @@
+{
+  "name":"$PAC",
+  "magicbytes": "2C61E5C8",
+  "port":7112,
+  "protocol_number":70215,
+  "magic_message":"DarkCoin Signed Message:",
+  "magic_message_newline":true,
+  "bootstrap_url":"http://explorer.paccoin.net",
+  "sentinel_version":"1.2.0"
+}

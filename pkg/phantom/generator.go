@@ -27,7 +27,7 @@
 *    it in the license file.
 */
 
-package main
+package phantom
 
 import (
 	"bufio"
@@ -39,7 +39,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"log"
 	"os"
-	"phantom/socket/wire"
+	"github.com/breakcrypto/phantom/pkg/socket/wire"
 	"sort"
 	"strconv"
 	"strings"
@@ -56,6 +56,7 @@ type MasternodePing struct {
 	SentinelVersion uint32
 	DaemonVersion uint32
 	HashQueue *Queue
+	BroadcastTemplate *wire.MsgMNB
 }
 
 type pingSlice []MasternodePing
@@ -89,7 +90,10 @@ func determinePingTime(unixTime string) (time.Time) {
 	return base.Add(result)
 }
 
-func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan MasternodePing, queue *Queue, magicMessage string, sentinelVersion uint32) {
+func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan MasternodePing, queue *Queue,
+	magicMessage string, sentinelVersion uint32, daemonVersion uint32, broadcastSet map[string]wire.MsgMNB) {
+
+	currentTime := time.Now().UTC()
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -100,16 +104,64 @@ func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan Masternod
 	pings := make(pingSlice, 0)
 
 	scanner := bufio.NewScanner(file)
+
+	i := 0
 	for scanner.Scan() {
-		fields := strings.Fields(scanner.Text())
+		line := scanner.Text()
+		if len(line) < 1 || line[0] == '#' {
+			continue
+		}
+
+		fields := strings.Fields(line)
+
+		//add an epoch if missing and alert
+		if len(fields) == 5 {
+			log.Println("No epoch time found for: ", fields[0], " assuming one.")
+			fields = append(fields, strconv.FormatInt(currentTime.Add(time.Duration(i*5) * time.Second).Unix() - 540, 10))
+			i++
+		}
+
+		if len(fields) != 6 {
+			log.Println("Error processing: ", line)
+			continue
+		}
 
 		outputIndex, err := strconv.Atoi(fields[4])
 		if err != nil {
-			log.Println("Error reading masternode index.")
+			log.Println("Error reading masternode index value.")
 		}
 
-		pings = append(pings, MasternodePing{fields[0], fields[3], uint32(outputIndex), fields[2], determinePingTime(fields[5]), magicMessage, sentinelVersion, daemonVersion, queue})
+		ping := MasternodePing{fields[0],
+			fields[3],
+			uint32(outputIndex),
+			fields[2],
+			determinePingTime(fields[5]),
+			magicMessage,
+			sentinelVersion,
+			daemonVersion,
+			queue,
+			nil,
+		}
 
+		if broadcastSet != nil {
+			//check for a broadcast template
+			broadcast, ok := broadcastSet[ping.OutpointHash +
+				":" + strconv.Itoa(int(ping.OutpointIndex))]
+
+			//provide the template
+			if ok {
+				ping.BroadcastTemplate = &broadcast
+
+				//remove the broadcast after 24 hours
+				sigTime := time.Unix(int64(broadcast.SigTime), 0)
+				if sigTime.Add(time.Hour * 24).Before(time.Now().UTC()) {
+					delete(broadcastSet, ping.OutpointHash +
+						":" + strconv.Itoa(int(ping.OutpointIndex)))
+				}
+			}
+		}
+
+		pings = append(pings, ping)
 	}
 
 	//sort the pings by time
@@ -124,7 +176,7 @@ func GeneratePingsFromMasternodeFile(filePath string, pingChannel chan Masternod
 
 }
 
-func (ping *MasternodePing) GenerateMasternodePing() (wire.MsgMNP){
+func (ping *MasternodePing) GenerateMasternodePing(sentinelVersion uint32, daemonVersion uint32) (wire.MsgMNP){
 	mnp := wire.MsgMNP{}
 
 	//add sentinel support
