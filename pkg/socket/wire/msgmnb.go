@@ -5,7 +5,6 @@
 package wire
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/binary"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -76,11 +75,15 @@ func (msg *MsgMNB) BtcDecode(r io.Reader, pver uint32, enc MessageEncoding) erro
 		return err
 	}
 
+	//fmt.Println("MNB VIN: ", msg.Vin)
+
 	//read the service
 	err = msg.Addr.BtcDecode(r, pver, enc)
 	if err != nil {
 		return err
 	}
+
+	//fmt.Println("MNB ADDR: ", msg.Addr)
 
 	msg.PubKeyCollateralAddress, err = ReadVarBytes(r, pver, MaxMessagePayload,
 		"PubKeyCollateralAddress")
@@ -101,13 +104,18 @@ func (msg *MsgMNB) BtcDecode(r io.Reader, pver uint32, enc MessageEncoding) erro
 		return err
 	}
 
+	//fmt.Println("PROTOCOL: ", msg.ProtocolVersion)
+
 	//decode the ping
 	msg.LastPing.BtcDecode(r, pver, enc)
+
+	//fmt.Println("PING TIME: ", time.Unix(int64(msg.LastPing.SigTime), 0).UTC().String())
 
 	msg.LastDsq, err = binarySerializer.Uint64(r, littleEndian)
 	if err != nil {
 		return err
 	}
+	//fmt.Println("LAST DSQ: ", msg.LastDsq)
 
 	return err
 }
@@ -163,11 +171,13 @@ func (msg *MsgMNB) Serialize(w io.Writer) error {
 }
 
 func (msg *MsgMNB) GetHash() chainhash.Hash {
-	var b bytes.Buffer
-	w := bufio.NewWriter(&b)
+	buf := bytes.NewBuffer(make([]byte, 0, msg.MaxPayloadLength(0)))
 
-	writeElement(w, msg.SigTime)
-	WriteVarBytes(w, 0, msg.PubKeyCollateralAddress[:])
+	writeElement(buf, msg.SigTime)
+	WriteVarBytes(buf, 0, msg.PubKeyCollateralAddress[:])
 
-	return chainhash.DoubleHashH(b.Bytes())
+	byteData := buf.Bytes()
+	hash := chainhash.DoubleHashH(byteData)
+
+	return hash
 }

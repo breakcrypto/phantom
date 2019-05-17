@@ -32,10 +32,11 @@ package phantom
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"log"
 	"net"
-	"github.com/breakcrypto/phantom/pkg/socket/wire"
+	"phantom/pkg/socket/wire"
 	"strconv"
 	"strings"
 	"sync"
@@ -111,7 +112,7 @@ func (pinger *PingerConnection) Start(userAgent string) {
 	for {
 
 		if connectionAttempts >= 10 || len(pinger.PingChannel) > 10 {
-			log.Println("Unable to connect -- closing connection / channel too full.")
+			log.Println("Unable to connect -- closing connection.")
 			pinger.SetStatus(-1)
 			return
 		}
@@ -137,7 +138,7 @@ func (pinger *PingerConnection) Start(userAgent string) {
 
 			//connection failed, set the status to -1 and let it be reaped
 			if connectionAttempts >= 10 || len(pinger.PingChannel) > 10 {
-				log.Println("Unable to connect -- closing connection / channel too full (inside).")
+				log.Println("Unable to connect -- closing connection.")
 				pinger.SetStatus(-1)
 				return
 			}
@@ -293,6 +294,10 @@ func (pinger *PingerConnection) Start(userAgent string) {
 							messageMap[invVec.Hash.String()] = &mnb
 						}
 
+						fmt.Println(mnp.Vin.PreviousOutPoint.String())
+						pingTime := time.Unix(int64(mnp.SigTime), 0)
+						fmt.Println("PING TIME:", pingTime.UTC().String())
+
 						//ALWAYS SEND THE PINGS
 						//serialize to a []byte
 						w := new(bytes.Buffer)
@@ -330,6 +335,9 @@ func (pinger *PingerConnection) Start(userAgent string) {
 							var buf bytes.Buffer
 							wire.WriteMessageN(&buf, val, pinger.ProtocolNumber, magic)
 							conn.Write(buf.Bytes())
+							log.Println("INV SENT.")
+						} else {
+							log.Println("HASH NOT FOUND.")
 						}
 					}
 				}

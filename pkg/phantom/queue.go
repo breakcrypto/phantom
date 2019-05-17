@@ -31,7 +31,7 @@ package phantom
 
 import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -42,7 +42,7 @@ type Queue struct {
 	head  int
 	tail  int
 	count int
-	mux sync.Mutex
+	muxex sync.Mutex
 }
 
 func NewQueue(size int) *Queue {
@@ -54,17 +54,19 @@ func NewQueue(size int) *Queue {
 
 // Push adds a node to the queue.
 func (q *Queue) Push(n *chainhash.Hash) {
-	q.mux.Lock()
+	q.muxex.Lock()
 
-	defer q.mux.Unlock()
+	defer q.muxex.Unlock()
 
 	//see if n is in the queue (inefficient but good enough for now)
 	for _, node := range q.nodes {
 		if node != nil && node.String() == n.String() {
-			log.Println("Duplicate hash found - all is well.")
+			log.Debug("Duplicate hash found - all is well.")
 			return //skip a hash that we already have
 		}
 	}
+
+	log.WithField("hash", n.String()).Info("Added new block hash to queue.")
 
 	if q.head == q.tail && q.count > 0 {
 		nodes := make([]*chainhash.Hash, len(q.nodes)+q.size)
@@ -81,9 +83,9 @@ func (q *Queue) Push(n *chainhash.Hash) {
 
 // Pop removes and returns a node from the queue in first to last order.
 func (q *Queue) Pop() *chainhash.Hash {
-	q.mux.Lock()
+	q.muxex.Lock()
 
-	defer q.mux.Unlock()
+	defer q.muxex.Unlock()
 
 	if q.count == 0 {
 		return nil
@@ -95,9 +97,9 @@ func (q *Queue) Pop() *chainhash.Hash {
 }
 
 func (q *Queue) Peek() *chainhash.Hash {
-	q.mux.Lock()
+	q.muxex.Lock()
 
-	defer q.mux.Unlock()
+	defer q.muxex.Unlock()
 
 	if q.count == 0 {
 		return nil
@@ -106,9 +108,9 @@ func (q *Queue) Peek() *chainhash.Hash {
 }
 
 func (q *Queue) Len() int {
-	q.mux.Lock()
+	q.muxex.Lock()
 
-	defer q.mux.Unlock()
+	defer q.muxex.Unlock()
 
 	return q.count
 }

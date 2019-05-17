@@ -7,10 +7,9 @@ package wire
 import (
 	"bytes"
 	"fmt"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"io"
 	"unicode/utf8"
-
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
 
 // MessageHeaderSize is the number of bytes in a bitcoin message header.
@@ -61,6 +60,7 @@ const (
 	CmdMNB			= "mnb"
 	CmdDESG			= "dseg"
 	CmdGovObj		= "govobj"
+	CmdDseep		= "dseep"
 )
 
 // MessageEncoding represents the wire message encoding format to be used.
@@ -132,6 +132,9 @@ func makeEmptyMessage(command string) (Message, error) {
 
 	case CmdMNB:
 		msg = &MsgMNB{}
+
+	//case CmdDseep:
+	//	msg = &MsgMNP{}
 
 	default:
 		return nil, fmt.Errorf("unhandled command [%s]", command)
@@ -343,6 +346,9 @@ func ReadMessageWithEncodingN(r io.Reader, pver uint32, btcnet BitcoinNet,
 	// Read payload.
 	payload := make([]byte, hdr.length)
 	n, err = io.ReadFull(r, payload)
+
+	//log.Debug("PAYLOAD BYTES: ", hex.EncodeToString(payload))
+
 	totalBytes += n
 	if err != nil {
 		return totalBytes, nil, nil, err

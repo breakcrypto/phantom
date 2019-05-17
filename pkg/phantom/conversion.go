@@ -2,11 +2,13 @@ package phantom
 
 import (
 	"errors"
+	log "github.com/sirupsen/logrus"
 	"net"
+	"phantom/cmd/refactor/database"
 	"strconv"
 	"strings"
 	"time"
-	"github.com/breakcrypto/phantom/pkg/socket/wire"
+	"phantom/pkg/socket/wire"
 )
 
 func ConvertVersionStringToInt(str string) uint32 {
@@ -33,12 +35,17 @@ func SplitAddress(pair string) (wire.NetAddress, error) {
 		uint16(port)}, nil
 }
 
-func SplitAddressList(bootstraps string) (addresses []wire.NetAddress) {
+func SplitAddressList(bootstraps string) (peers []database.Peer) {
 	for _, bootstrap := range strings.Split(bootstraps, ",") {
-		ip, err := SplitAddress(bootstrap)
-		if err == nil {
-			addresses = append(addresses, ip)
+		host, port, err := net.SplitHostPort(bootstrap)
+		if err != nil {
+			log.Error(err)
 		}
+		portVal, err := strconv.Atoi(port)
+		if err != nil {
+			log.Error(err)
+		}
+		peers = append(peers, database.Peer{Address:host, Port:uint32(portVal), LastSeen:time.Now()})
 	}
-	return addresses
+	return peers
 }

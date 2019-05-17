@@ -35,7 +35,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"github.com/breakcrypto/phantom/pkg/socket/wire"
+	"phantom/pkg/socket/wire"
 	"strconv"
 )
 
