@@ -84,7 +84,7 @@ func ParseRemoteChains(data string) (RemoteChainConnections, error) {
 }
 
 type RemoteChain interface {
-	GetBlockHash(blockNumber uint64) (chainhash.Hash, error)
+	GetBlockHash(blockNumber int) (chainhash.Hash, error)
 	GetPeers(portFilter uint32) ([]database.Peer, error)
 	GetChainHeight() (int, error)
 	GetTransaction(id string) (string, error)

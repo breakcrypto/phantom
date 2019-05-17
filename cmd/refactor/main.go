@@ -73,7 +73,7 @@ func main() {
 	var done chan bool
 
 	phantom.Preamble(VERSION)
-	time.Sleep(10 * time.Second)
+	//time.Sleep(10 * time.Second)
 
 	phantomDaemon := PhantomDaemon{}
 
@@ -348,7 +348,7 @@ func (p *PhantomDaemon) Start() {
 
 		//make sure we haven't loaded a bootstrap already
 		if hash == defaultHash {
-			hash, err = bootstrap.GetBlockHash(uint64(height - 12))
+			hash, err = bootstrap.GetBlockHash(height - 12)
 			if err != nil {
 				log.Error("Failed to load bootstrap hash")
 				hash = defaultHash //reset to default just to be safe

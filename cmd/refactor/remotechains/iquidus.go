@@ -5,7 +5,7 @@ import (
 	"github.com/breakcrypto/phantom/pkg/socket/wire"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"phantom/cmd/refactor/database"
 	"strconv"
@@ -16,12 +16,10 @@ type IquidusExplorer struct {
 	BaseURL string
 }
 
-func (i *IquidusExplorer) GetBlockHash(blockNumber uint64) (chainhash.Hash, error) {
+func (i *IquidusExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) {
 	var strBlockHash string
 
-	blockCount, _ := i.GetChainHeight()
-
-	response, err := http.Get(i.BaseURL + "/api/getblockhash?index=" + strconv.Itoa(blockCount-12))
+	response, err := http.Get(i.BaseURL + "/api/getblockhash?index=" + strconv.Itoa(blockNumber))
 	if err != nil {
 		log.Printf("%s", err)
 		return chainhash.Hash{}, err
@@ -122,6 +120,9 @@ func (i *IquidusExplorer) GetTransaction(txid string) (string, error) {
 }
 
 func (i *IquidusExplorer) SetURL(url string) {
+	if url[len(url)-1] == '/' {
+		url = url[0:len(url)-1]
+	}
 	i.BaseURL = url
 }
 

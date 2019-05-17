@@ -12,7 +12,7 @@ type RPCExplorer struct {
 	Password string
 }
 
-func (i *RPCExplorer) GetBlockHash(blockNumber uint64) (chainhash.Hash, error) {
+func (i *RPCExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) {
 	return chainhash.Hash{}, errors.New("Not yet implented.")
 }
 

@@ -2,14 +2,13 @@ package remotechains
 
 import (
 	"encoding/json"
-	"github.com/breakcrypto/phantom/pkg/socket/wire"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/pkg/errors"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"phantom/cmd/refactor/database"
 	"strconv"
-	"time"
 )
 
 //https://gist.github.com/jackzampolin/da3201b89d23dd5fa3becb0185da1fb2
@@ -18,12 +17,18 @@ type InsightExplorer struct {
 	BaseURL string
 }
 
-func (i *InsightExplorer) GetBlockHash(blockNumber uint64) (chainhash.Hash, error) {
-	var strBlockHash string
+type SyncResult struct {
+	BlockChainHeight int `json:"blockChainHeight"`
+}
 
-	blockCount, _ := i.GetChainHeight()
+type BlockIndexResult struct {
+	BlockHash string `json:"blockHash"`
+}
 
-	response, err := http.Get(i.BaseURL + "/api/getblockhash?index=" + strconv.Itoa(blockCount-12))
+func (i *InsightExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) {
+	var result BlockIndexResult
+
+	response, err := http.Get(i.BaseURL + "/api/block-index/" + strconv.Itoa(blockNumber))
 	if err != nil {
 		log.Printf("%s", err)
 		return chainhash.Hash{}, err
@@ -31,66 +36,32 @@ func (i *InsightExplorer) GetBlockHash(blockNumber uint64) (chainhash.Hash, erro
 		defer response.Body.Close()
 		contents, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			log.Printf("%s", err)
+			log.Error("%s", err)
 			return chainhash.Hash{}, err
 		}
 
-		strBlockHash = string(contents)
+		err = json.Unmarshal([]byte(contents), &result)
+		if err != nil {
+			log.Error(err)
+			return chainhash.Hash{}, err
+		}
 	}
 
 	var bootstrapHash chainhash.Hash
-	chainhash.Decode(&bootstrapHash,strBlockHash)
+	chainhash.Decode(&bootstrapHash,result.BlockHash)
 
 	return bootstrapHash, nil
 }
 
 func (i *InsightExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
-	var possiblePeers []database.Peer
-
-	response, err := http.Get(i.BaseURL + "/api/getpeerinfo")
-	if err != nil {
-		log.Printf("%s", err)
-		return nil, err
-	}
-
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Printf("%s", err)
-		return nil, err
-	}
-
-	var s = new([]PossiblePeer)
-	err = json.Unmarshal(body, &s)
-	if err != nil {
-		log.Printf("%s", err)
-		return nil, err
-	}
-
-	for _, possiblePeer := range *s {
-		var possible wire.NetAddress
-
-		if possiblePeer.Addr != "" {
-			possible, _ = SplitAddress(possiblePeer.Addr)
-			if err == nil {
-				peer := database.Peer{Address:possible.IP.String(),Port:uint32(possible.Port),LastSeen:time.Now()}
-				possiblePeers = AddPossiblePeer(peer, possiblePeers, portFilter)
-			}
-		}
-
-		if possiblePeer.Addr != "" {
-			possible, _ = SplitAddress(possiblePeer.Addrlocal)
-			if err == nil {
-				peer := database.Peer{Address:possible.IP.String(),Port:uint32(possible.Port),LastSeen:time.Now()}
-				possiblePeers = AddPossiblePeer(peer, possiblePeers, portFilter)
-			}
-		}
-	}
-
-	return possiblePeers, nil
+	return nil, errors.New("Insight doesn't support peers.")
 }
 
 func (i *InsightExplorer) GetChainHeight() (blockCount int, err error) {
-	response, err := http.Get(i.BaseURL + "/api/getblockcount")
+	var result SyncResult
+
+	response, err := http.Get(i.BaseURL + "/api/sync")
+
 	if err != nil {
 		log.Printf("%s", err)
 		return -1, err
@@ -98,16 +69,22 @@ func (i *InsightExplorer) GetChainHeight() (blockCount int, err error) {
 		defer response.Body.Close()
 		contents, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			log.Printf("%s", err)
+			log.Error("%s", err)
 			return -1, err
 		}
-		blockCount, _ = strconv.Atoi(string(contents))
+
+		err = json.Unmarshal([]byte(contents), &result)
+		if err != nil {
+			log.Error(err)
+			return -1, err
+		}
 	}
-	return blockCount, nil
+
+	return result.BlockChainHeight, nil
 }
 
 func (i *InsightExplorer) GetTransaction(txid string) (string, error) {
-	response, err := http.Get(i.BaseURL + "/api/getrawtransaction?txid=" + txid + "&decrypt=1")
+	response, err := http.Get(i.BaseURL + "/api/tx/" + txid)
 	if err != nil {
 		log.Printf("%s", err)
 		return "", err
@@ -124,6 +101,9 @@ func (i *InsightExplorer) GetTransaction(txid string) (string, error) {
 }
 
 func (i *InsightExplorer) SetURL(url string) {
+	if url[len(url)-1] == '/' {
+		url = url[0:len(url)-1]
+	}
 	i.BaseURL = url
 }
 
