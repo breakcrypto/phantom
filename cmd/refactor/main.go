@@ -466,6 +466,7 @@ func (p *PhantomDaemon) processNewMasternodePing(ping *wire.MsgMNP) {
 func (p *PhantomDaemon)  generatePings(channels ...chan events.Event) {
 	for {
 		startTime := time.Now()
+
 		generator.GeneratePingsFromMasternodeFile(
 			p.MasternodeConf,
 			p.PeerConnectionTemplate.MagicMessage,
@@ -474,7 +475,8 @@ func (p *PhantomDaemon)  generatePings(channels ...chan events.Event) {
 			p.PeerConnectionTemplate.DaemonVersion,
 			channels...,
 		)
-		sleepTime := time.Now().Add(time.Minute * 10).Sub(startTime)
+		
+		sleepTime := startTime.Add(time.Minute * 10).Sub(time.Now())
 
 		//sleep for the remaining 10 minutes, if there are any.
 		if sleepTime > 0 {
