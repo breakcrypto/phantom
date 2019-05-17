@@ -89,7 +89,7 @@ func (b *BlockQueue) cleanMap() {
 	for {
 		//check every 5 minutes
 		time.Sleep(time.Minute * 5)
-		log.WithField("time", time.Now()).Info("Cleaning orphan blocks.")
+		log.WithField("time", time.Now()).Debug("Cleaning orphan blocks.")
 
 		b.mutex.Lock()
 		currentTime := time.Now()
