@@ -29,7 +29,7 @@ type PhantomDaemon struct {
 	BootstrapIPs string
 	DNSSeeds string
 	BootstrapHash chainhash.Hash
-	BootstrapExplorer string
+	BootstrapChains []remotechains.RemoteChain
 	MasternodeConf string
 	CoinCon phantom.CoinConf
 	DefaultPort uint
@@ -81,6 +81,7 @@ func main() {
 	var magicMsgNewLine bool
 	var protocolNum uint
 	var bootstrapHashStr string
+	var bootstrapChainsStr string
 	var sentinelString string
 	var daemonString string
 	var coinConfString string
@@ -129,10 +130,12 @@ func main() {
 		"",
 		"Hash to bootstrap the pings with ( top - 12 )")
 
-	flag.StringVar(&phantomDaemon.BootstrapExplorer,
-		"bootstrap_url",
+	flag.StringVar(&bootstrapChainsStr,
+		"bootstrap_chains",
 		"",
-		"Explorer to bootstrap from.")
+		`Remote chains to bootstrap from. This is a JSON array in the form of:]\n)
+			[{"username:"user","password":"secret","format":"iquidus","url":"http://some.explorer"},{...}"]\n\n
+			Valid chain formats are: iquidus, insight, or rpc`)
 
 	flag.StringVar(&sentinelString,
 		"sentinel_version",
@@ -218,8 +221,8 @@ func main() {
 				bootstrapHashStr = coinConf.BootstrapHash
 			}
 
-			if phantomDaemon.BootstrapExplorer == "" {
-				phantomDaemon.BootstrapExplorer = coinConf.BootstrapURL
+			if bootstrapChainsStr == "" {
+				bootstrapChainsStr = coinConf.BootstrapChains
 			}
 
 			if sentinelString == "" {
@@ -273,6 +276,21 @@ func main() {
 		chainhash.Decode(&phantomDaemon.BootstrapHash,bootstrapHashStr)
 	}
 
+	if bootstrapChainsStr != "" {
+		remoteChains, err := remotechains.ParseRemoteChains(bootstrapChainsStr)
+		if err != nil {
+			log.Warn("Failed to parse bootstrap_chains: ", bootstrapChainsStr)
+		}
+
+		for _, remote := range remoteChains {
+			phantomDaemon.BootstrapChains = append(phantomDaemon.BootstrapChains,
+				remotechains.StringToRemoteChain(remote.Format,
+					remote.URL,
+					remote.Username,
+					remote.Password))
+		}
+	}
+
 	log.WithFields(log.Fields{
 		"masternode_conf":  phantomDaemon.MasternodeConf,
 		"magic_bytes":      strings.ToUpper(strconv.FormatInt(
@@ -280,7 +298,7 @@ func main() {
 		"magic_message":    phantomDaemon.PeerConnectionTemplate.MagicMessage,
 		"protocol_number":  phantomDaemon.PeerConnectionTemplate.ProtocolNumber,
 		"bootstrap_ips":    phantomDaemon.BootstrapIPs,
-		"bootstrap_url":    phantomDaemon.BootstrapExplorer,
+		"bootstrap_url":    bootstrapChainsStr,
 		"bootstrap_hash":   phantomDaemon.BootstrapHash.String(),
 		"autosense":        phantomDaemon.PeerConnectionTemplate.Autosense,
 		"broadcast_listen": phantomDaemon.BroadcastListen,
@@ -314,9 +332,9 @@ func (p *PhantomDaemon) Start() {
 	//load peers
 
 	var hash chainhash.Hash
+	defaultHash := chainhash.Hash{}
 
-	if p.BootstrapExplorer != "" {
-		var bootstrap remotechains.RemoteChain = remotechains.IquidusExplorer{BaseURL:p.BootstrapExplorer}
+	for _, bootstrap := range p.BootstrapChains {
 		peers, err := bootstrap.GetPeers(uint32(p.DefaultPort))
 		if err != nil {
 			log.Error("Failed to load bootstrap peers")
@@ -327,16 +345,20 @@ func (p *PhantomDaemon) Start() {
 		if err != nil {
 			log.Error("Failed to load bootstrap height")
 		}
-		hash, err = bootstrap.GetBlockHash(uint64(height-12))
-		if err != nil {
-			log.Error("Failed to load bootstrap height")
+
+		//make sure we haven't loaded a bootstrap already
+		if hash == defaultHash {
+			hash, err = bootstrap.GetBlockHash(uint64(height - 12))
+			if err != nil {
+				log.Error("Failed to load bootstrap hash")
+				hash = defaultHash //reset to default just to be safe
+			}
+			log.WithFields(log.Fields{
+				"hash": hash.String(),
+			}).Info("Bootstrap hash value")
 		}
-		log.WithFields(log.Fields{
-			"hash": hash.String(),
-		}).Info("Bootstrap hash value")
 	}
 
-	defaultHash := chainhash.Hash{}
 	if hash == defaultHash {
 		hash = p.BootstrapHash
 	}
@@ -475,7 +497,7 @@ func (p *PhantomDaemon)  generatePings(channels ...chan events.Event) {
 			p.PeerConnectionTemplate.DaemonVersion,
 			channels...,
 		)
-		
+
 		sleepTime := startTime.Add(time.Minute * 10).Sub(time.Now())
 
 		//sleep for the remaining 10 minutes, if there are any.

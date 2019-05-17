@@ -12,11 +12,13 @@ import (
 	"time"
 )
 
-type IquidusExplorer struct {
+//https://gist.github.com/jackzampolin/da3201b89d23dd5fa3becb0185da1fb2
+
+type InsightExplorer struct {
 	BaseURL string
 }
 
-func (i *IquidusExplorer) GetBlockHash(blockNumber uint64) (chainhash.Hash, error) {
+func (i *InsightExplorer) GetBlockHash(blockNumber uint64) (chainhash.Hash, error) {
 	var strBlockHash string
 
 	blockCount, _ := i.GetChainHeight()
@@ -42,7 +44,7 @@ func (i *IquidusExplorer) GetBlockHash(blockNumber uint64) (chainhash.Hash, erro
 	return bootstrapHash, nil
 }
 
-func (i *IquidusExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
+func (i *InsightExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
 	var possiblePeers []database.Peer
 
 	response, err := http.Get(i.BaseURL + "/api/getpeerinfo")
@@ -87,7 +89,7 @@ func (i *IquidusExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
 	return possiblePeers, nil
 }
 
-func (i *IquidusExplorer) GetChainHeight() (blockCount int, err error) {
+func (i *InsightExplorer) GetChainHeight() (blockCount int, err error) {
 	response, err := http.Get(i.BaseURL + "/api/getblockcount")
 	if err != nil {
 		log.Printf("%s", err)
@@ -104,7 +106,7 @@ func (i *IquidusExplorer) GetChainHeight() (blockCount int, err error) {
 	return blockCount, nil
 }
 
-func (i *IquidusExplorer) GetTransaction(txid string) (string, error) {
+func (i *InsightExplorer) GetTransaction(txid string) (string, error) {
 	response, err := http.Get(i.BaseURL + "/api/getrawtransaction?txid=" + txid + "&decrypt=1")
 	if err != nil {
 		log.Printf("%s", err)
@@ -121,9 +123,9 @@ func (i *IquidusExplorer) GetTransaction(txid string) (string, error) {
 	return "", nil
 }
 
-func (i *IquidusExplorer) SetURL(url string) {
+func (i *InsightExplorer) SetURL(url string) {
 	i.BaseURL = url
 }
 
-func (i *IquidusExplorer) SetUsername(username string) {}
-func (i *IquidusExplorer) SetPassword(password string) {}
+func (i *InsightExplorer) SetUsername(username string) {}
+func (i *InsightExplorer) SetPassword(password string) {}
