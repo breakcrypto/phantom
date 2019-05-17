@@ -355,9 +355,9 @@ func (pinger *PeerConnection) Start(bootstrapHash *chainhash.Hash, userAgent str
 							messageMap[invVec.Hash.String()] = &mnb
 						}
 
-						log.Info(mnp.Vin.PreviousOutPoint.String())
+						log.Debug(mnp.Vin.PreviousOutPoint.String())
 						pingTime := time.Unix(int64(mnp.SigTime), 0)
-						log.Info("Ping time: ", pingTime.UTC().String())
+						log.Debug("Ping time: ", pingTime.UTC().String())
 
 						//ALWAYS SEND THE PINGS
 						//serialize to a []byte
@@ -386,7 +386,7 @@ func (pinger *PeerConnection) Start(bootstrapHash *chainhash.Hash, userAgent str
 						//store the ping
 						messageMap[invVec.Hash.String()] = &mnp
 					default:
-						log.Info("That shouldn't happen", event)
+						//log.Info("That shouldn't happen", event)
 					}
 
 				default:
