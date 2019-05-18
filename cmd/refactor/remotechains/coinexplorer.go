@@ -2,8 +2,8 @@ package remotechains
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -12,24 +12,26 @@ import (
 	"strings"
 )
 
-//https://gist.github.com/jackzampolin/da3201b89d23dd5fa3becb0185da1fb2
+type CoinExplorerBlockResult struct {
+	Result  struct {
+	Hash              string    `json:"hash"`
+	} `json:"result"`
+}
 
-type InsightExplorer struct {
+type CoinExplorerBlockLatestResult struct {
+	Result  struct {
+		Height            int   	`json:"height"`
+	} `json:"result"`
+}
+
+type CoinExplorer struct {
 	BaseURL string
 }
 
-type SyncResult struct {
-	BlockChainHeight int `json:"blockChainHeight"`
-}
+func (e *CoinExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) {
+	var result CoinExplorerBlockResult
 
-type BlockIndexResult struct {
-	BlockHash string `json:"blockHash"`
-}
-
-func (i *InsightExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) {
-	var result BlockIndexResult
-
-	response, err := http.Get(i.BaseURL + "/api/block-index/" + strconv.Itoa(blockNumber))
+	response, err := http.Get(e.BaseURL + "/block?height=" + strconv.Itoa(blockNumber))
 	if err != nil {
 		log.Printf("%s", err)
 		return chainhash.Hash{}, err
@@ -49,20 +51,19 @@ func (i *InsightExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) 
 	}
 
 	var bootstrapHash chainhash.Hash
-	chainhash.Decode(&bootstrapHash,result.BlockHash)
+	chainhash.Decode(&bootstrapHash,result.Result.Hash)
 
 	return bootstrapHash, nil
 }
 
-func (i *InsightExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
-	return nil, errors.New("Insight doesn't support peers.")
+func (e *CoinExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
+	return nil, errors.New("CoinExplorer doesn't support peers.")
 }
 
-func (i *InsightExplorer) GetChainHeight() (blockCount int, err error) {
-	var result SyncResult
+func (e *CoinExplorer) GetChainHeight() (blockNumber int, err error) {
+	var result CoinExplorerBlockLatestResult
 
-	response, err := http.Get(i.BaseURL + "/api/sync")
-
+	response, err := http.Get(e.BaseURL + "/block/latest")
 	if err != nil {
 		log.Printf("%s", err)
 		return -1, err
@@ -80,12 +81,11 @@ func (i *InsightExplorer) GetChainHeight() (blockCount int, err error) {
 			return -1, err
 		}
 	}
-
-	return result.BlockChainHeight, nil
+	return result.Result.Height, nil
 }
 
-func (i *InsightExplorer) GetTransaction(txid string) (string, error) {
-	response, err := http.Get(i.BaseURL + "/api/tx/" + txid)
+func (e *CoinExplorer) GetTransaction(txid string) (string, error) {
+	response, err := http.Get(e.BaseURL + "transaction?txid=" + txid)
 	if err != nil {
 		log.Printf("%s", err)
 		return "", err
@@ -101,9 +101,9 @@ func (i *InsightExplorer) GetTransaction(txid string) (string, error) {
 	return "", nil
 }
 
-func (i *InsightExplorer) SetURL(url string) {
-	i.BaseURL = strings.TrimRight(url,"/")
+func (e *CoinExplorer) SetURL(url string) {
+	e.BaseURL = strings.TrimRight(url,"/")
 }
 
-func (i *InsightExplorer) SetUsername(username string) {}
-func (i *InsightExplorer) SetPassword(password string) {}
+func (e *CoinExplorer) SetUsername(username string) {}
+func (e *CoinExplorer) SetPassword(password string) {}

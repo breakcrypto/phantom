@@ -16,7 +16,10 @@ const (
 	UNKNOWN RemoteChainFormat = -1
 	IQUIDUS RemoteChainFormat = 0
 	INSIGHT RemoteChainFormat = 1
-	RPC RemoteChainFormat = 2
+	BULWARK RemoteChainFormat = 2
+	CRYPTOID RemoteChainFormat = 3
+	COINEXPLORER RemoteChainFormat = 4
+	RPC RemoteChainFormat = 5
 )
 
 type GetPeerInfoResponse struct {
@@ -37,6 +40,12 @@ func StringToRemoteChain(format string, url string, username string, password st
 		remoteChain = &IquidusExplorer{}
 	case StringToRemoteChainFormat(format) == INSIGHT:
 		remoteChain = &InsightExplorer{}
+	case StringToRemoteChainFormat(format) == BULWARK:
+		remoteChain = &InsightExplorer{}
+	case StringToRemoteChainFormat(format) == CRYPTOID:
+		remoteChain = &InsightExplorer{}
+	case StringToRemoteChainFormat(format) == COINEXPLORER:
+		remoteChain = &InsightExplorer{}
 	case StringToRemoteChainFormat(format) == RPC:
 		remoteChain = &RPCExplorer{}
 	}
@@ -56,6 +65,12 @@ func StringToRemoteChainFormat(str string) RemoteChainFormat {
 		return IQUIDUS
 	case str == "INSIGHT":
 		return INSIGHT
+	case str == "BULWARK":
+		return BULWARK
+	case str == "CRYPTOID":
+		return CRYPTOID
+	case str == "COINEXPLORER":
+		return COINEXPLORER
 	case str == "RPC":
 		return RPC
 	}

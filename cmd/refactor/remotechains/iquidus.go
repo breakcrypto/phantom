@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"phantom/cmd/refactor/database"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -120,10 +121,7 @@ func (i *IquidusExplorer) GetTransaction(txid string) (string, error) {
 }
 
 func (i *IquidusExplorer) SetURL(url string) {
-	if url[len(url)-1] == '/' {
-		url = url[0:len(url)-1]
-	}
-	i.BaseURL = url
+	i.BaseURL = strings.TrimRight(url,"/")
 }
 
 func (i *IquidusExplorer) SetUsername(username string) {}
