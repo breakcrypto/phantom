@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 
-cd 'cmd/phantom'
+export GO111MODULE=on
+
+cd 'cmd/refactor'
 
 go get -d -v ./...
 go install -v ./...
 
 package_name=phantom
 
-platforms=("windows/amd64" "linux/amd64" "darwin/amd64" "linux/arm" )
+platforms=("windows/amd64" "linux/amd64" "darwin/amd64" "linux/arm")
 
 for platform in "${platforms[@]}"
 do
