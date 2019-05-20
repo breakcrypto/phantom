@@ -20,7 +20,7 @@ type IquidusExplorer struct {
 func (i *IquidusExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) {
 	var strBlockHash string
 
-	response, err := http.Get(i.BaseURL + "/api/getblockhash?index=" + strconv.Itoa(blockNumber))
+	response, err := http.Get(i.BaseURL + "/getblockhash?index=" + strconv.Itoa(blockNumber))
 	if err != nil {
 		log.Printf("%s", err)
 		return chainhash.Hash{}, err
@@ -44,7 +44,7 @@ func (i *IquidusExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) 
 func (i *IquidusExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
 	var possiblePeers []database.Peer
 
-	response, err := http.Get(i.BaseURL + "/api/getpeerinfo")
+	response, err := http.Get(i.BaseURL + "/getpeerinfo")
 	if err != nil {
 		log.Printf("%s", err)
 		return nil, err
@@ -87,7 +87,7 @@ func (i *IquidusExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
 }
 
 func (i *IquidusExplorer) GetChainHeight() (blockCount int, err error) {
-	response, err := http.Get(i.BaseURL + "/api/getblockcount")
+	response, err := http.Get(i.BaseURL + "/getblockcount")
 	if err != nil {
 		log.Printf("%s", err)
 		return -1, err
@@ -104,7 +104,7 @@ func (i *IquidusExplorer) GetChainHeight() (blockCount int, err error) {
 }
 
 func (i *IquidusExplorer) GetTransaction(txid string) (string, error) {
-	response, err := http.Get(i.BaseURL + "/api/getrawtransaction?txid=" + txid + "&decrypt=1")
+	response, err := http.Get(i.BaseURL + "/getrawtransaction?txid=" + txid + "&decrypt=1")
 	if err != nil {
 		log.Printf("%s", err)
 		return "", err

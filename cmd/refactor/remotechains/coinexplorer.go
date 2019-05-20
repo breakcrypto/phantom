@@ -85,7 +85,7 @@ func (e *CoinExplorer) GetChainHeight() (blockNumber int, err error) {
 }
 
 func (e *CoinExplorer) GetTransaction(txid string) (string, error) {
-	response, err := http.Get(e.BaseURL + "transaction?txid=" + txid)
+	response, err := http.Get(e.BaseURL + "/transaction?txid=" + txid)
 	if err != nil {
 		log.Printf("%s", err)
 		return "", err

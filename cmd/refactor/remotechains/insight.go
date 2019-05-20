@@ -29,7 +29,7 @@ type BlockIndexResult struct {
 func (i *InsightExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) {
 	var result BlockIndexResult
 
-	response, err := http.Get(i.BaseURL + "/api/block-index/" + strconv.Itoa(blockNumber))
+	response, err := http.Get(i.BaseURL + "/block-index/" + strconv.Itoa(blockNumber))
 	if err != nil {
 		log.Printf("%s", err)
 		return chainhash.Hash{}, err
@@ -61,7 +61,7 @@ func (i *InsightExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
 func (i *InsightExplorer) GetChainHeight() (blockCount int, err error) {
 	var result SyncResult
 
-	response, err := http.Get(i.BaseURL + "/api/sync")
+	response, err := http.Get(i.BaseURL + "/sync")
 
 	if err != nil {
 		log.Printf("%s", err)
@@ -85,7 +85,7 @@ func (i *InsightExplorer) GetChainHeight() (blockCount int, err error) {
 }
 
 func (i *InsightExplorer) GetTransaction(txid string) (string, error) {
-	response, err := http.Get(i.BaseURL + "/api/tx/" + txid)
+	response, err := http.Get(i.BaseURL + "/tx/" + txid)
 	if err != nil {
 		log.Printf("%s", err)
 		return "", err

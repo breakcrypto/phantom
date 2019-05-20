@@ -16,7 +16,7 @@ type CryptoidExplorer struct {
 }
 
 func (e *CryptoidExplorer) GetBlockHash(blockNumber int) (bootstrapHash chainhash.Hash, err error) {
-	response, err := http.Get(e.BaseURL + "/api.dws?q=getblockhash&height=" + strconv.Itoa(blockNumber))
+	response, err := http.Get(e.BaseURL + "?q=getblockhash&height=" + strconv.Itoa(blockNumber))
 	if err != nil {
 		log.Printf("%s", err)
 		return chainhash.Hash{}, err
@@ -38,7 +38,7 @@ func (e *CryptoidExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) 
 }
 
 func (e *CryptoidExplorer) GetChainHeight() (blockCount int, err error) {
-	response, err := http.Get(e.BaseURL + "/api.dws?q=getblockcount")
+	response, err := http.Get(e.BaseURL + "?q=getblockcount")
 	if err != nil {
 		log.Printf("%s", err)
 		return -1, err
@@ -55,7 +55,7 @@ func (e *CryptoidExplorer) GetChainHeight() (blockCount int, err error) {
 }
 
 func (e *CryptoidExplorer) GetTransaction(txid string) (string, error) {
-	response, err := http.Get(e.BaseURL + "/api.dws?q=txinfo&t=" + txid)
+	response, err := http.Get(e.BaseURL + "?q=txinfo&t=" + txid)
 	if err != nil {
 		log.Printf("%s", err)
 		return "", err
@@ -73,7 +73,6 @@ func (e *CryptoidExplorer) GetTransaction(txid string) (string, error) {
 
 func (e *CryptoidExplorer) SetURL(url string) {
 	url = strings.TrimRight(url,"/")
-	e.BaseURL = strings.TrimRight(url,"/api.dws")
 }
 
 func (e *CryptoidExplorer) SetUsername(username string) {}

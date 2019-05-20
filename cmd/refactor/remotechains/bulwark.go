@@ -33,7 +33,7 @@ type BulwarkExplorer struct {
 func (e *BulwarkExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) {
 	var result BulwarkBlockResult
 
-	response, err := http.Get(e.BaseURL + "/api/block/" + strconv.Itoa(blockNumber))
+	response, err := http.Get(e.BaseURL + "/block/" + strconv.Itoa(blockNumber))
 	if err != nil {
 		log.Printf("%s", err)
 		return chainhash.Hash{}, err
@@ -61,7 +61,7 @@ func (e *BulwarkExplorer) GetBlockHash(blockNumber int) (chainhash.Hash, error) 
 func (e *BulwarkExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
 	var possiblePeers []database.Peer
 
-	response, err := http.Get(e.BaseURL + "/api/peer")
+	response, err := http.Get(e.BaseURL + "/peer")
 	if err != nil {
 		log.Printf("%s", err)
 		return nil, err
@@ -89,7 +89,7 @@ func (e *BulwarkExplorer) GetPeers(portFilter uint32) ([]database.Peer, error) {
 }
 
 func (e *BulwarkExplorer) GetChainHeight() (blockCount int, err error) {
-	response, err := http.Get(e.BaseURL + "/api/getblockcount")
+	response, err := http.Get(e.BaseURL + "/getblockcount")
 	if err != nil {
 		log.Printf("%s", err)
 		return -1, err
@@ -106,7 +106,7 @@ func (e *BulwarkExplorer) GetChainHeight() (blockCount int, err error) {
 }
 
 func (e *BulwarkExplorer) GetTransaction(txid string) (string, error) {
-	response, err := http.Get(e.BaseURL + "/api/tx/" + txid)
+	response, err := http.Get(e.BaseURL + "/tx/" + txid)
 	if err != nil {
 		log.Printf("%s", err)
 		return "", err
