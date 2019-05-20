@@ -156,6 +156,7 @@ func GeneratePingsFromMasternodeFile(filePath string,
 
 		//provide the template
 		if broadcast != nil {
+			log.Debug("Broadcast template located for: ", broadcast.Vin.PreviousOutPoint.String())
 			ping.BroadcastTemplate = broadcast
 		}
 

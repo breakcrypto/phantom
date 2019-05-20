@@ -34,7 +34,6 @@ type PhantomDaemon struct {
 	CoinCon phantom.CoinConf
 	DefaultPort uint
 	PeerConnections []database.Peer
-	BroadcastListen bool
 	//for the peers
 	PeerConnectionTemplate PeerConnection
 }
@@ -152,7 +151,7 @@ func main() {
 		"@_breakcrypto's phantoms",
 		"The user agent string to connect to remote peers with.")
 
-	flag.BoolVar(&phantomDaemon.BroadcastListen,
+	flag.BoolVar(&phantomDaemon.PeerConnectionTemplate.BroadcastListen,
 		"broadcast_listen",
 		false,
 		"If set to true, the phantom will listen for new broadcasts and cache them for 4 hours.")
@@ -238,8 +237,8 @@ func main() {
 				phantomDaemon.PeerConnectionTemplate.UserAgent = coinConf.UserAgent
 			}
 
-			if !phantomDaemon.BroadcastListen && coinConf.BroadcastListen != nil {
-				phantomDaemon.BroadcastListen = *coinConf.BroadcastListen
+			if !phantomDaemon.PeerConnectionTemplate.BroadcastListen && coinConf.BroadcastListen != nil {
+				phantomDaemon.PeerConnectionTemplate.BroadcastListen = *coinConf.BroadcastListen
 			}
 
 			if phantomDaemon.PeerConnectionTemplate.Autosense && coinConf.Autosense != nil {
@@ -298,15 +297,16 @@ func main() {
 		"magic_message":    phantomDaemon.PeerConnectionTemplate.MagicMessage,
 		"protocol_number":  phantomDaemon.PeerConnectionTemplate.ProtocolNumber,
 		"bootstrap_ips":    phantomDaemon.BootstrapIPs,
-		"bootstrap_url":    bootstrapChainsStr,
+		"bootstrap_chains":    bootstrapChainsStr,
 		"bootstrap_hash":   phantomDaemon.BootstrapHash.String(),
 		"autosense":        phantomDaemon.PeerConnectionTemplate.Autosense,
-		"broadcast_listen": phantomDaemon.BroadcastListen,
+		"broadcast_listen": phantomDaemon.PeerConnectionTemplate.BroadcastListen,
 		"daemon_version":   phantomDaemon.PeerConnectionTemplate.DaemonVersion,
 		"sentinel_version": phantomDaemon.PeerConnectionTemplate.SentinelVersion,
 		"user_agent":       phantomDaemon.PeerConnectionTemplate.UserAgent,
 		"dns_seeds":        phantomDaemon.DNSSeeds,
 		"default_port":     phantomDaemon.DefaultPort,
+		"debug":     		debugLogging,
 	}).Info("Using the following settings.")
 
 	phantomDaemon.Start()
@@ -394,6 +394,7 @@ func (p *PhantomDaemon) Start() {
 			DaemonVersion:p.PeerConnectionTemplate.DaemonVersion,
 			UseOutpointFormat:p.PeerConnectionTemplate.UseOutpointFormat,
 			Autosense:p.PeerConnectionTemplate.Autosense,
+			BroadcastListen:p.PeerConnectionTemplate.BroadcastListen,
 		}
 
 		log.WithField("peer ip", peer).Debug("Starting new peer.")
@@ -547,6 +548,7 @@ func (p *PhantomDaemon) spawnNewPeer(inboundEventChannel chan events.Event, outb
 		DaemonVersion:p.PeerConnectionTemplate.DaemonVersion,
 		UseOutpointFormat:p.PeerConnectionTemplate.UseOutpointFormat,
 		Autosense:p.PeerConnectionTemplate.Autosense,
+		BroadcastListen:p.PeerConnectionTemplate.BroadcastListen,
 	}
 
 	return &peer

@@ -53,6 +53,7 @@ func (b *broadcastStore) GetBroadcast(key string) *wire.MsgMNB {
 func (b *broadcastStore) DeleteBroadcast(key string) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
+
 	delete(b.broadcastSet, key)
 }
 

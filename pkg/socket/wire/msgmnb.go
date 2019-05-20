@@ -111,10 +111,11 @@ func (msg *MsgMNB) BtcDecode(r io.Reader, pver uint32, enc MessageEncoding) erro
 
 	//fmt.Println("PING TIME: ", time.Unix(int64(msg.LastPing.SigTime), 0).UTC().String())
 
-	msg.LastDsq, err = binarySerializer.Uint64(r, littleEndian)
-	if err != nil {
-		return err
-	}
+	//TODO MAKE IT SO MSGMNB/MNP CAN ASK THE PHANTOM FOR COIN SETTINGS TO ASSIST IN DECODE GUESSING
+	msg.LastDsq, _ = binarySerializer.Uint64(r, littleEndian) //ignore lastdsq errors
+	//if err != nil {
+	//	return err
+	//}
 	//fmt.Println("LAST DSQ: ", msg.LastDsq)
 
 	return err

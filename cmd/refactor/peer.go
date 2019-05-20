@@ -129,44 +129,48 @@ func (pinger *PeerConnection) Start(bootstrapHash *chainhash.Hash, userAgent str
 
 			//wait up to 2 minutes for a PING to come in
 			conn.SetReadDeadline(time.Now().Add(2 * time.Minute))
-			_, msg, _, err := wire.ReadMessageN(bufReader, pinger.ProtocolNumber, magic)
+			_, msg, _, errRead := wire.ReadMessageN(bufReader, pinger.ProtocolNumber, magic)
 
-			if (err != nil) {
-				if err, ok := err.(net.Error); ok && err.Timeout() {
+			if (errRead != nil) {
+				if err, ok := errRead.(net.Error); ok && err.Timeout() {
 					log.Error("Connection timeout. Bail.")
 					pinger.OutboundEvents <- events.Event{Type:events.PeerDisconnect, Data:pinger}
 					return
 				}
 
-				if strings.Contains(err.Error(), "unhandled command") {
+				if strings.Contains(errRead.Error(), "unhandled command") {
 					//log.Println(err)
 					continue
 				}
 
-				log.Debug("%s : %s", pinger.PeerInfo.Address, err)
+				log.Debugf("%s : %s", pinger.PeerInfo.Address, errRead)
 				connectionAttempts++
 				continue
 			} else {
 
-				//log.Println("COMMAND: ", msg.Command())
+				log.Debug("COMMAND: ", msg.Command())
 
 				connectionAttempts = 0
 
 				if (msg.Command() == "inv") {
 					inv := msg.(*wire.MsgInv)
+
 					for _, inventory := range (inv.InvList) {
+
+						log.Debug("INVENTORY TYPE: ", inventory.Type)
+
 						if inventory.Type.String() == "MSG_BLOCK" {
 							log.Debug("New block received: " + inventory.Hash.String())
 							pinger.OutboundEvents <- events.Event{events.NewBlock, &inventory.Hash}
 						}
 
-						if inventory.Type.String() == "Unknown InvType (14)" && pinger.BroadcastListen {
+						if inventory.Type == 14 && pinger.BroadcastListen {
 							//MNANNOUNCE RECEIVED FOR OUR NODE
 							getdata := wire.MsgGetData{}
 							getdata.AddInvVect(inventory)
 
 							var buf bytes.Buffer
-							wire.WriteMessageN(&buf, &getdata, pinger.ProtocolNumber, magic)
+							_, err := wire.WriteMessageN(&buf, &getdata, pinger.ProtocolNumber, magic)
 
 							conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
 							_, err = conn.Write(buf.Bytes())
@@ -177,7 +181,7 @@ func (pinger *PeerConnection) Start(bootstrapHash *chainhash.Hash, userAgent str
 							}
 						}
 
-						if inventory.Type.String() == "Unknown InvType (15)" && pinger.Autosense {
+						if inventory.Type == 15 && pinger.Autosense {
 							//PULL MNPS TO ENABLE AUTOSENSE
 							getdata := wire.MsgGetData{}
 							getdata.AddInvVect(inventory)
