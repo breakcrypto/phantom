@@ -1,0 +1,10 @@
+{
+"name":"Daps-coin",
+"magicbytes":"8479B7A4",
+"port":53572,
+"protocol_number":70913,
+"magic_message":"DarkNet Signed Message:",
+"magic_message_newline":true,
+"user_agent":"Hosted by POSMN.com",
+"bootstrap_ips":"118.25.197.145:53572,123.1.96.107:53572,209.250.232.169:53572,45.32.71.21:53572"
+}

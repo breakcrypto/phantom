@@ -57,10 +57,10 @@ const (
 	CmdCFilter      = "cfilter"
 	CmdCFHeaders    = "cfheaders"
 	CmdCFCheckpt    = "cfcheckpt"
-	CmdMNP			= "mnp"
-	CmdMNB			= "mnb"
-	CmdDESG			= "dseg"
-	CmdGovObj		= "govobj"
+	CmdMNP          = "mnp"
+	CmdMNB          = "mnb"
+	CmdDESG         = "dseg"
+	CmdGovObj       = "govobj"
 )
 
 // MessageEncoding represents the wire message encoding format to be used.
@@ -332,6 +332,11 @@ func ReadMessageWithEncodingN(r io.Reader, pver uint32, btcnet BitcoinNet,
 	// could otherwise create a well-formed header and set the length to max
 	// numbers in order to exhaust the machine's memory.
 	mpl := msg.MaxPayloadLength(pver)
+
+	// in case of DAPS (magic=2222569380) set accepted header length from 160 to 30003
+	if hdr.magic == BitcoinNet(2222569380) {
+		mpl = 30003
+	}
 	if hdr.length > mpl {
 		discardInput(r, hdr.length)
 		str := fmt.Sprintf("payload exceeds max length - header "+

@@ -25,7 +25,7 @@
 *    delete this exception statement from your version. If you delete this
 *    exception statement from all source files in the program, then also delete
 *    it in the license file.
-*/
+ */
 
 package main
 
@@ -33,13 +33,14 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"log"
-	"github.com/breakcrypto/phantom/pkg/socket/wire"
-	"github.com/breakcrypto/phantom/pkg/phantom"
 	"strconv"
 	"sync"
 	"time"
+
+	"../../src/phantom"
+	"../../src/socket/wire"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
 
 var maxConnections uint
@@ -92,7 +93,6 @@ func main() {
 	flag.StringVar(&userAgent, "user_agent", "@_breakcrypto phantom", "The user agent string to connect to remote peers with.")
 
 	flag.BoolVar(&broadcastListen, "broadcast_listen", false, "If set to true, the phantom will listen for new broadcasts and cache them for 4 hours.")
-
 
 	flag.Parse()
 
@@ -188,7 +188,7 @@ func main() {
 	if bootstrapExplorer != "" {
 		//check for a trailing slash
 		if bootstrapExplorer[len(bootstrapExplorer)-1] == '/' {
-			bootstrapExplorer = bootstrapExplorer[0:len(bootstrapExplorer)-1]
+			bootstrapExplorer = bootstrapExplorer[0 : len(bootstrapExplorer)-1]
 		}
 
 		bootstrapper := phantom.Bootstrapper{bootstrapExplorer}
@@ -215,7 +215,7 @@ func main() {
 		}
 
 	} else {
-		chainhash.Decode(&bootstrapHash,bootstrapHashStr)
+		chainhash.Decode(&bootstrapHash, bootstrapHashStr)
 		hashQueue.Push(&bootstrapHash)
 	}
 
@@ -245,18 +245,18 @@ func main() {
 		waitGroup.Add(1)
 
 		pinger := phantom.PingerConnection{
-			MagicBytes: magicBytes,
-			IpAddress: ip.IP.String(),
-			Port: uint16(ip.Port),
-			ProtocolNumber: protocolNumber,
+			MagicBytes:      magicBytes,
+			IpAddress:       ip.IP.String(),
+			Port:            uint16(ip.Port),
+			ProtocolNumber:  protocolNumber,
 			SentinelVersion: sentinelVersion,
-			DaemonVersion: daemonVersion,
-			BootstrapHash: bootstrapHash,
-			PingChannel: pingChannel,
-			AddrChannel: addrProcessingChannel,
-			HashChannel: hashProcessingChannel,
-			Status: 0,
-			WaitGroup: &waitGroup,
+			DaemonVersion:   daemonVersion,
+			BootstrapHash:   bootstrapHash,
+			PingChannel:     pingChannel,
+			AddrChannel:     addrProcessingChannel,
+			HashChannel:     hashProcessingChannel,
+			Status:          0,
+			WaitGroup:       &waitGroup,
 		}
 
 		//not ideal
@@ -298,7 +298,7 @@ func generatePings(pingChannel chan phantom.MasternodePing, queue *phantom.Queue
 			sentinelVersion,
 			daemonVersion,
 			broadcastSet,
-			)
+		)
 
 		time.Sleep((time.Minute * 10) + (time.Second * 5))
 	}
@@ -323,8 +323,8 @@ func processNewBroadcasts(broadcastChannel chan wire.MsgMNB, broadcastSet map[st
 
 		mnb := <-broadcastChannel
 
-		broadcastSet[mnb.Vin.PreviousOutPoint.Hash.String() +
-			":" + strconv.Itoa(int(mnb.Vin.PreviousOutPoint.Index))] = mnb
+		broadcastSet[mnb.Vin.PreviousOutPoint.Hash.String()+
+			":"+strconv.Itoa(int(mnb.Vin.PreviousOutPoint.Index))] = mnb
 	}
 }
 
@@ -357,7 +357,7 @@ func getNextPeer(connectionSet map[string]*phantom.PingerConnection, peerSet map
 	return returnValue, errors.New("No peers found.")
 }
 
-func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[string]wire.NetAddress, pingChannel chan phantom.MasternodePing, addrChannel chan  wire.NetAddress, hashChannel chan chainhash.Hash, broadcastChannel chan wire.MsgMNB, waitGroup sync.WaitGroup) {
+func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[string]wire.NetAddress, pingChannel chan phantom.MasternodePing, addrChannel chan wire.NetAddress, hashChannel chan chainhash.Hash, broadcastChannel chan wire.MsgMNB, waitGroup sync.WaitGroup) {
 
 	time.Sleep(10 * time.Second) //hack to work around .Wait() race condition on fast start-ups
 
@@ -407,11 +407,11 @@ func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[s
 		log.Println("Current number of connections to network: (", len(connectionSet), " / ", maxConnections, ")")
 
 		//spawn off extra nodes here if we don't have enough
-		if len(connectionSet) <  int(maxConnections) {
+		if len(connectionSet) < int(maxConnections) {
 
 			log.Println("Under the max connection count, spawning new peer (", len(connectionSet), " / ", maxConnections, ")")
 
-			for i := 0; i < int(maxConnections) - len(connectionSet); i++ {
+			for i := 0; i < int(maxConnections)-len(connectionSet); i++ {
 
 				//spawn off a new connection
 				peer, err := getNextPeer(connectionSet, peerSet)
@@ -426,15 +426,15 @@ func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[s
 				// intentionally don't provide a bootstraphash to prevent
 				// duplicate data downloads for unneeded blocks
 				newPinger := phantom.PingerConnection{
-					MagicBytes: 	 magicBytes,
+					MagicBytes:      magicBytes,
 					IpAddress:       peer.IP.String(),
 					Port:            peer.Port,
 					ProtocolNumber:  protocolNumber,
 					SentinelVersion: sentinelVersion,
 					DaemonVersion:   daemonVersion,
 					PingChannel:     newPingChannel,
-					AddrChannel: 	 addrChannel,
-					HashChannel: 	 hashChannel,
+					AddrChannel:     addrChannel,
+					HashChannel:     hashChannel,
 					Status:          0,
 					WaitGroup:       &waitGroup,
 				}
@@ -442,7 +442,6 @@ func sendPings(connectionSet map[string]*phantom.PingerConnection, peerSet map[s
 				if broadcastChannel != nil {
 					newPinger.BroadcastChannel = broadcastChannel
 				}
-
 
 				//make a client
 				newConnectionSet[newPinger.IpAddress] = &newPinger

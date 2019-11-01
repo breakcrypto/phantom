@@ -25,18 +25,19 @@
 *    delete this exception statement from your version. If you delete this
 *    exception statement from all source files in the program, then also delete
 *    it in the license file.
-*/
+ */
 
 package phantom
 
 import (
 	"encoding/json"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"github.com/breakcrypto/phantom/pkg/socket/wire"
 	"strconv"
+
+	"../../src/socket/wire"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
 
 type Bootstrapper struct {
@@ -48,8 +49,8 @@ type GetPeerInfoResponse struct {
 }
 
 type PossiblePeer struct {
-	Addr            string        `json:"addr"`
-	Addrlocal       string        `json:"addrlocal"`
+	Addr      string `json:"addr"`
+	Addrlocal string `json:"addrlocal"`
 }
 
 func (b Bootstrapper) LoadBlockHash() (chainhash.Hash, error) {
@@ -85,7 +86,7 @@ func (b Bootstrapper) LoadBlockHash() (chainhash.Hash, error) {
 	}
 
 	var bootstrapHash chainhash.Hash
-	chainhash.Decode(&bootstrapHash,strBlockHash)
+	chainhash.Decode(&bootstrapHash, strBlockHash)
 
 	return bootstrapHash, nil
 }

@@ -16,6 +16,7 @@ import (
 	"bytes"
 	"io"
 	"time"
+
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	//"unsafe"
 )
