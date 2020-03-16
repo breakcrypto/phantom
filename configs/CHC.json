@@ -1,1 +1,1 @@
-{"name":"CHC","magicbytes":"037AD2A3","port":11994,"protocol_number":70015,"magic_message":"DarkNet Signed Message:","magic_message_newline":true,"bootstrap_url":""}
+{"name":"CHC","magicbytes":"037AD2A3","port":11994,"protocol_number":70015,"magic_message":"DarkNet Signed Message:","magic_message_newline":true,"sentinel_version":"1.30.0","bootstrap_url":""}
