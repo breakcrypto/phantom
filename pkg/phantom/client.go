@@ -265,7 +265,7 @@ func (pinger *PingerConnection) Start(userAgent string) {
 				//non-blocking select
 				select {
 					case ping := <-pinger.PingChannel:
-						log.Printf("REQUEST RECIEVED, RELAYING: %s\n",
+						log.Printf("REQUEST RECEIVED, RELAYING: %s\n",
 							ping.Name)
 
 						mnp := ping.GenerateMasternodePing(pinger.SentinelVersion, pinger.DaemonVersion)
