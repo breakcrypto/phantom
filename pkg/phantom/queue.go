@@ -97,14 +97,19 @@ func (q *Queue) Pop() *chainhash.Hash {
 }
 
 func (q *Queue) Peek() *chainhash.Hash {
-	q.muxex.Lock()
+    q.muxex.Lock()
+    defer q.muxex.Unlock()
 
-	defer q.muxex.Unlock()
+    if q.count == 0 {
+        return nil
+    }
 
-	if q.count == 0 {
-		return nil
-	}
-	return q.nodes[q.head]
+    // Get the last element by accessing the element at the tail index
+    index := q.tail - 1
+    if index < 0 {
+        index = len(q.nodes) - 1
+    }
+    return q.nodes[index]
 }
 
 func (q *Queue) Len() int {
